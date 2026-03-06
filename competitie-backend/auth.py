@@ -1,5 +1,5 @@
-import bcrypt
-from jose import jwt
+from passlib.context import CryptContext
+from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from typing import Optional
 import os
@@ -7,6 +7,8 @@ import os
 SECRET_KEY = os.getenv("SECRET_KEY", "een-geheime-sleutel-verander-dit")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def truncate_password(password: str) -> str:
     """Zorg dat wachtwoord niet langer is dan 72 bytes (bcrypt-limiet)."""
@@ -16,18 +18,12 @@ def truncate_password(password: str) -> str:
     return encoded[:72].decode('utf-8', errors='ignore')
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verifieer wachtwoord met bcrypt."""
     plain_password = truncate_password(plain_password)
-    return bcrypt.checkpw(
-        plain_password.encode('utf-8'),
-        hashed_password.encode('utf-8')
-    )
+    return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password: str) -> str:
-    """Genereer bcrypt-hash voor wachtwoord."""
     password = truncate_password(password)
-    salt = bcrypt.gensalt()
-    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+    return pwd_context.hash(password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
