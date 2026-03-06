@@ -10,7 +10,12 @@ import StatCard from '@/components/StatCard';
 import CompetitionCard from '@/components/CompetitionCard';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 
+// Tijdelijke code om token bij laden te tonen
+useEffect(() => {
+  alert('Token bij laden dashboard: ' + localStorage.getItem('token'));
+}, []);
 export default function Index() {
   const { data: competitions = [], isLoading, error } = useQuery({
     queryKey: ['competitions'],
