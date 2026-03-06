@@ -1,6 +1,4 @@
-useEffect(() => {
-  alert('Token: ' + localStorage.getItem('token'));
-}, []);
+import { useEffect } from 'react';
 import { Trophy, Users, Weight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -10,13 +8,13 @@ import StatCard from '@/components/StatCard';
 import CompetitionCard from '@/components/CompetitionCard';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { useEffect } from 'react';
 
-// Tijdelijke code om token bij laden te tonen
-useEffect(() => {
-  alert('Token bij laden dashboard: ' + localStorage.getItem('token'));
-}, []);
 export default function Index() {
+  // Tijdelijke code om token te tonen (verwijder later)
+  useEffect(() => {
+    alert('Token bij laden dashboard: ' + localStorage.getItem('token'));
+  }, []);
+
   const { data: competitions = [], isLoading, error } = useQuery({
     queryKey: ['competitions'],
     queryFn: fetchCompetitions
