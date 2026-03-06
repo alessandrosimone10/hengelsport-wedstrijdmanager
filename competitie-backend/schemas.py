@@ -1,5 +1,27 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List, Optional, Any
+
+# ---------- Authentication ----------
+class UserBase(BaseModel):
+    email: EmailStr
+
+class UserCreate(UserBase):
+    password: str
+
+class User(UserBase):
+    id: int
+    is_active: bool
+    is_admin: bool
+
+    class Config:
+        orm_mode = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    id: Optional[int] = None
 
 # ---------- Basis schema's ----------
 class CompetitionBase(BaseModel):
@@ -32,6 +54,17 @@ class CatchBase(BaseModel):
     class Config:
         orm_mode = True
 
+# ---------- Create schema's ----------
+class CompetitionCreate(CompetitionBase):
+    pass
+
+class ParticipantCreate(ParticipantBase):
+    pass
+
+class CatchCreate(CatchBase):
+    pass
+
+# ---------- Update schema (voor PATCH) ----------
 class CompetitionUpdate(BaseModel):
     name: Optional[str] = None
     date: Optional[str] = None
@@ -46,16 +79,6 @@ class CompetitionUpdate(BaseModel):
 
     class Config:
         orm_mode = True
-
-# ---------- Create schema's (gebruiken zelfde velden, geen extra) ----------
-class CompetitionCreate(CompetitionBase):
-    pass
-
-class ParticipantCreate(ParticipantBase):
-    pass
-
-class CatchCreate(CatchBase):
-    pass
 
 # ---------- Response schema's (inclusief relaties) ----------
 class Catch(CatchBase):
