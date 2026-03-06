@@ -19,10 +19,10 @@ app = FastAPI(title="Competitie API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://hengelsport-wedstrijdma-git-9aa740-alessandrosimone10s-projects.vercel.app",  # jouw huidige preview-URL
-        "https://hengelsport-wedstrijdmanager.vercel.app"  # productie-URL (als die bestaat)
+        "https://hengelsport-wedstrijdmanager.vercel.app",
+        "https://hengelsport-wedstrijdma-git-9aa740-alessandrosimone10s-projects.vercel.app"
     ],
-    allow_credentials=False,  # niet nodig voor tokens
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
