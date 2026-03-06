@@ -1,6 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Fish, Trophy, Home, Plus, Wallet } from 'lucide-react';
+import { Fish, Trophy, Home, Plus, Wallet, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from './ui/button';
 
 const navItems = [
   { to: '/', icon: Home, label: 'Dashboard' },
@@ -11,6 +13,7 @@ const navItems = [
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-background">
@@ -25,6 +28,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               VisWedstrijd
             </span>
           </Link>
+
           <nav className="flex items-center gap-1">
             {navItems.map(({ to, icon: Icon, label }) => {
               const isActive = location.pathname === to || 
@@ -52,6 +56,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               );
             })}
           </nav>
+
+          {/* Gebruikersinfo */}
+          {user && (
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground hidden md:inline">
+                {user.email}
+              </span>
+              <Button variant="ghost" size="sm" onClick={logout}>
+                <LogOut className="h-4 w-4" />
+                <span className="sr-only">Uitloggen</span>
+              </Button>
+            </div>
+          )}
         </div>
       </header>
 
