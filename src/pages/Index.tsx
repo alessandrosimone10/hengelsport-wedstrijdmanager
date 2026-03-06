@@ -1,3 +1,6 @@
+useEffect(() => {
+  alert('Token: ' + localStorage.getItem('token'));
+}, []);
 import { Trophy, Users, Weight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
