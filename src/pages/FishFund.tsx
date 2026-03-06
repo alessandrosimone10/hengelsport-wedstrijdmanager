@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { getCompetitions, formatWeight } from '@/lib/store';
+import { useQuery } from '@tanstack/react-query';
+import { fetchCompetitions } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -8,13 +9,19 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
 export default function FishFund() {
-  const competitions = getCompetitions();
+  const { data: competitions = [], isLoading, error } = useQuery({
+    queryKey: ['competitions'],
+    queryFn: fetchCompetitions,
+  });
+
+  if (isLoading) return <div className="p-8 text-center">Laden...</div>;
+  if (error) return <div className="p-8 text-center text-red-500">Fout: {error.message}</div>;
 
   const rows = competitions.map(comp => {
-    const entryFee = comp.entryFee ?? 0;
+    const entryFee = comp.entry_fee ?? 0;               // let op: underscore
     const calculatedPot = entryFee * comp.participants.length;
-    const prizePot = comp.customPrizePot ?? calculatedPot;
-    const fishPct = comp.fishFundPercentage ?? 25;
+    const prizePot = comp.custom_prize_pot ?? calculatedPot; // underscore
+    const fishPct = comp.fish_fund_percentage ?? 25;         // underscore
     const fishAmount = prizePot * (fishPct / 100);
     return { comp, prizePot, fishPct, fishAmount };
   });
