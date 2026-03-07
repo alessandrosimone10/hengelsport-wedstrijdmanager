@@ -239,6 +239,7 @@ export default function CompetitionDetail() {
   const prizePercentages = competition.prize_percentages ?? getDefaultPercentages(prizeWinners);
   const prizeAmounts = prizePercentages.map(pct => distributablePot * (pct / 100));
 
+ 
   // ----- Handlers -----
   const handleAddParticipant = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -637,7 +638,19 @@ export default function CompetitionDetail() {
           </CardContent>
         </Card>
       )}
-
+    {/* Bezetting */}
+      {competition.max_participants && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">Bezetting</p>
+              <p className="text-sm font-mono">
+                {competition.participants.length} / {competition.max_participants} deelnemers
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
       {/* Klassement */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
