@@ -1,4 +1,4 @@
-from irm_kmi_api import IrmKmiApiClient
+from irm_kmi_api import IrmKmiApi
 import aiohttp
 from zoneinfo import ZoneInfo
 from typing import Optional, Dict
@@ -6,19 +6,12 @@ from typing import Optional, Dict
 async def get_weather_for_location(lat: float, lon: float) -> Optional[Dict]:
     """
     Haalt actueel weer op voor gegeven coördinaten via de KMI API.
-    
-    Args:
-        lat: Breedtegraad
-        lon: Lengtegraad
-    
-    Returns:
-        Dictionary met weerinfo of None bij fout
     """
     try:
         async with aiohttp.ClientSession() as session:
-            client = IrmKmiApiClient(
+            client = IrmKmiApi(
                 session=session, 
-                user_agent="HengelsportWedstrijdManager/1.0"
+                user_agent="HengelsportWedstrijdmanager/1.0"
             )
             
             # Ververs de weersvoorspelling voor deze coördinaten
