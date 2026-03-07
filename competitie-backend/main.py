@@ -1,6 +1,5 @@
 import geocoding
 import weather
-from weather import get_weather_for_location
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -17,7 +16,7 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Competitie API")
 
-# CORS toestaan voor frontend (tijdens ontwikkeling)
+# CORS toestaan voor frontend (productie-URL's)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -90,7 +89,10 @@ def get_competitions(db: Session = Depends(get_db), current_user: models.User = 
 
 @app.get("/competitions/{comp_id}", response_model=schemas.Competition)
 def get_competition(comp_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    comp = db.query(models.Competition).filter(models.Competition.id == comp_id, models.Competition.owner_id == current_user.id).first()
+    comp = db.query(models.Competition).filter(
+        models.Competition.id == comp_id,
+        models.Competition.owner_id == current_user.id
+    ).first()
     if not comp:
         raise HTTPException(404, "Competitie niet gevonden")
     return comp
@@ -105,16 +107,19 @@ async def create_competition(comp: schemas.CompetitionCreate, db: Session = Depe
         db_comp = models.Competition(**comp.dict(), owner_id=current_user.id, latitude=lat, longitude=lon)
     else:
         db_comp = models.Competition(**comp.dict(), owner_id=current_user.id)
-        print(f"⚠️ Geen coördinaten gevonden voor {comp.location}")
+        print(f"⚠️ Geen coördinaten gevonden voor {comp.location}")  # Overweeg logging in productie
     
     db.add(db_comp)
     db.commit()
     db.refresh(db_comp)
     return db_comp
-    
+
 @app.put("/competitions/{comp_id}", response_model=schemas.Competition)
 def update_competition(comp_id: int, comp_update: schemas.CompetitionCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    db_comp = db.query(models.Competition).filter(models.Competition.id == comp_id, models.Competition.owner_id == current_user.id).first()
+    db_comp = db.query(models.Competition).filter(
+        models.Competition.id == comp_id,
+        models.Competition.owner_id == current_user.id
+    ).first()
     if not db_comp:
         raise HTTPException(404, "Competitie niet gevonden")
     for key, value in comp_update.dict().items():
@@ -125,7 +130,10 @@ def update_competition(comp_id: int, comp_update: schemas.CompetitionCreate, db:
 
 @app.patch("/competitions/{comp_id}", response_model=schemas.Competition)
 def patch_competition(comp_id: int, comp_update: schemas.CompetitionUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    db_comp = db.query(models.Competition).filter(models.Competition.id == comp_id, models.Competition.owner_id == current_user.id).first()
+    db_comp = db.query(models.Competition).filter(
+        models.Competition.id == comp_id,
+        models.Competition.owner_id == current_user.id
+    ).first()
     if not db_comp:
         raise HTTPException(404, "Competitie niet gevonden")
     update_data = comp_update.dict(exclude_unset=True)
@@ -137,7 +145,10 @@ def patch_competition(comp_id: int, comp_update: schemas.CompetitionUpdate, db: 
 
 @app.delete("/competitions/{comp_id}")
 def delete_competition(comp_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    db_comp = db.query(models.Competition).filter(models.Competition.id == comp_id, models.Competition.owner_id == current_user.id).first()
+    db_comp = db.query(models.Competition).filter(
+        models.Competition.id == comp_id,
+        models.Competition.owner_id == current_user.id
+    ).first()
     if not db_comp:
         raise HTTPException(404, "Competitie niet gevonden")
     db.delete(db_comp)
@@ -146,7 +157,10 @@ def delete_competition(comp_id: int, db: Session = Depends(get_db), current_user
 
 @app.patch("/competitions/{comp_id}/status")
 def update_status(comp_id: int, status: str, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    db_comp = db.query(models.Competition).filter(models.Competition.id == comp_id, models.Competition.owner_id == current_user.id).first()
+    db_comp = db.query(models.Competition).filter(
+        models.Competition.id == comp_id,
+        models.Competition.owner_id == current_user.id
+    ).first()
     if not db_comp:
         raise HTTPException(404, "Competitie niet gevonden")
     db_comp.status = status
@@ -156,7 +170,10 @@ def update_status(comp_id: int, status: str, db: Session = Depends(get_db), curr
 # ---------- Deelnemers ----------
 @app.post("/competitions/{comp_id}/participants", response_model=schemas.Participant)
 def add_participant(comp_id: int, participant: schemas.ParticipantCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    comp = db.query(models.Competition).filter(models.Competition.id == comp_id, models.Competition.owner_id == current_user.id).first()
+    comp = db.query(models.Competition).filter(
+        models.Competition.id == comp_id,
+        models.Competition.owner_id == current_user.id
+    ).first()
     if not comp:
         raise HTTPException(404, "Competitie niet gevonden")
     db_part = models.Participant(**participant.dict(), competition_id=comp_id, owner_id=current_user.id)
@@ -167,7 +184,10 @@ def add_participant(comp_id: int, participant: schemas.ParticipantCreate, db: Se
 
 @app.put("/participants/{part_id}")
 def update_participant(part_id: int, participant: schemas.ParticipantCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    db_part = db.query(models.Participant).filter(models.Participant.id == part_id, models.Participant.owner_id == current_user.id).first()
+    db_part = db.query(models.Participant).filter(
+        models.Participant.id == part_id,
+        models.Participant.owner_id == current_user.id
+    ).first()
     if not db_part:
         raise HTTPException(404, "Deelnemer niet gevonden")
     for key, value in participant.dict().items():
@@ -177,7 +197,10 @@ def update_participant(part_id: int, participant: schemas.ParticipantCreate, db:
 
 @app.delete("/participants/{part_id}")
 def delete_participant(part_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    db_part = db.query(models.Participant).filter(models.Participant.id == part_id, models.Participant.owner_id == current_user.id).first()
+    db_part = db.query(models.Participant).filter(
+        models.Participant.id == part_id,
+        models.Participant.owner_id == current_user.id
+    ).first()
     if not db_part:
         raise HTTPException(404, "Deelnemer niet gevonden")
     db.delete(db_part)
@@ -186,7 +209,10 @@ def delete_participant(part_id: int, db: Session = Depends(get_db), current_user
 
 @app.post("/competitions/{comp_id}/assign-numbers")
 def assign_numbers_randomly(comp_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    comp = db.query(models.Competition).filter(models.Competition.id == comp_id, models.Competition.owner_id == current_user.id).first()
+    comp = db.query(models.Competition).filter(
+        models.Competition.id == comp_id,
+        models.Competition.owner_id == current_user.id
+    ).first()
     if not comp or not comp.available_numbers:
         raise HTTPException(400, "Geen beschikbare nummers")
     numbers = comp.available_numbers[:]
@@ -200,7 +226,10 @@ def assign_numbers_randomly(comp_id: int, db: Session = Depends(get_db), current
 # ---------- Vangsten ----------
 @app.post("/participants/{part_id}/catches", response_model=schemas.Catch)
 def add_catch(part_id: int, catch: schemas.CatchCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    part = db.query(models.Participant).filter(models.Participant.id == part_id, models.Participant.owner_id == current_user.id).first()
+    part = db.query(models.Participant).filter(
+        models.Participant.id == part_id,
+        models.Participant.owner_id == current_user.id
+    ).first()
     if not part:
         raise HTTPException(404, "Deelnemer niet gevonden")
     db_catch = models.Catch(**catch.dict(), participant_id=part_id, owner_id=current_user.id)
@@ -211,7 +240,10 @@ def add_catch(part_id: int, catch: schemas.CatchCreate, db: Session = Depends(ge
 
 @app.put("/catches/{catch_id}", response_model=schemas.Catch)
 def update_catch(catch_id: int, catch: schemas.CatchCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    db_catch = db.query(models.Catch).filter(models.Catch.id == catch_id, models.Catch.owner_id == current_user.id).first()
+    db_catch = db.query(models.Catch).filter(
+        models.Catch.id == catch_id,
+        models.Catch.owner_id == current_user.id
+    ).first()
     if not db_catch:
         raise HTTPException(404, "Vangst niet gevonden")
     for key, value in catch.dict().items():
@@ -222,43 +254,47 @@ def update_catch(catch_id: int, catch: schemas.CatchCreate, db: Session = Depend
 
 @app.delete("/catches/{catch_id}")
 def delete_catch(catch_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    db_catch = db.query(models.Catch).filter(models.Catch.id == catch_id, models.Catch.owner_id == current_user.id).first()
+    db_catch = db.query(models.Catch).filter(
+        models.Catch.id == catch_id,
+        models.Catch.owner_id == current_user.id
+    ).first()
     if not db_catch:
         raise HTTPException(404, "Vangst niet gevonden")
     db.delete(db_catch)
     db.commit()
     return {"ok": True}
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
+# ---------- Weer endpoint ----------
 @app.get("/competitions/{comp_id}/weather")
 async def get_competition_weather(
-    comp_id: int, 
-    db: Session = Depends(get_db), 
+    comp_id: int,
+    db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
     comp = db.query(models.Competition).filter(
-        models.Competition.id == comp_id, 
+        models.Competition.id == comp_id,
         models.Competition.owner_id == current_user.id
     ).first()
-    
+
     if not comp:
         raise HTTPException(404, "Competitie niet gevonden")
-    
+
     if not comp.latitude or not comp.longitude:
-        # Probeer coördinaten alsnog te vinden
+        # Probeer coördinaten alsnog te vinden (voor oude wedstrijden)
         coordinates = await geocoding.get_coordinates_from_location(comp.location)
         if coordinates:
             comp.latitude, comp.longitude = coordinates
             db.commit()
         else:
             raise HTTPException(400, f"Geen coördinaten gevonden voor locatie: {comp.location}")
-    
+
     weather_data = await weather.get_weather_for_location(comp.latitude, comp.longitude)
-    
+
     if not weather_data:
         raise HTTPException(503, "Weerdata niet beschikbaar op dit moment")
-    
-    return weather_dataimport geocoding
+
+    return weather_data
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
