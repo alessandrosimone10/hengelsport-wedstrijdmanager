@@ -28,8 +28,16 @@ app = FastAPI(title="Competitie API")
 # ---------- CORS ----------
 app.add_middleware(
     CORSMiddleware,
+
     allow_origins=["*"],
     allow_credentials=True,
+
+    allow_origins=[
+        "https://hengelsport-wedstrijdmanager.vercel.app",
+        "https://hengelsport-wedstrijdma-git-9aa740-alessandrosimone10s-projects.vercel.app"
+    ],
+    allow_credentials=False,
+
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -480,6 +488,7 @@ def get_ranking(
     ranking.sort(key=lambda x: x["total_weight"], reverse=True)
     return ranking
 
+
 # ---------- DASHBOARD ----------
 @app.get("/competitions/{comp_id}/dashboard")
 def get_dashboard(
@@ -505,3 +514,17 @@ def get_dashboard(
         "total_fish": total_fish,
         "total_weight": total_weight
     }
+
+@app.delete("/catches/{catch_id}")
+def delete_catch(catch_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    db_catch = db.query(models.Catch).filter(models.Catch.id == catch_id, models.Catch.owner_id == current_user.id).first()
+    if not db_catch:
+        raise HTTPException(404, "Vangst niet gevonden")
+    db.delete(db_catch)
+    db.commit()
+    return {"ok": True}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
