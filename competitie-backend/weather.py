@@ -10,8 +10,8 @@ async def get_weather_for_location(lat: float, lon: float) -> Optional[Dict]:
         )
 
         async with httpx.AsyncClient() as client:
-            r = await client.get(url)
-            data = r.json()
+            response = await client.get(url)
+            data = response.json()
 
         current = data["current"]
 
@@ -19,7 +19,6 @@ async def get_weather_for_location(lat: float, lon: float) -> Optional[Dict]:
             "temperature": round(current["temperature_2m"]),
             "wind_speed": round(current["wind_speed_10m"]),
             "wind_direction": current["wind_direction_10m"],
-            "condition": "Actueel weer",
         }
 
     except Exception as e:
