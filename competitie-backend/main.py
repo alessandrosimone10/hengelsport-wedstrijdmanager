@@ -96,13 +96,22 @@ def get_competition(comp_id: int, db: Session = Depends(get_db), current_user: m
     return comp
 
 @app.post("/competitions", response_model=schemas.Competition)
-def create_competition(comp: schemas.CompetitionCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    db_comp = models.Competition(**comp.dict(), owner_id=current_user.id)
+async def create_competition(comp: schemas.CompetitionCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    # Controleer of we coördinaten kunnen vinden voor de locatie
+    coordinates = await get_coordinates_from_location(comp.location)
+    
+    if coordinates:
+        lat, lon = coordinates
+        db_comp = models.Competition(**comp.dict(), owner_id=current_user.id, latitude=lat, longitude=lon)
+    else:
+        # Als geen coördinaten gevonden, sla dan op zonder (of met null)
+        db_comp = models.Competition(**comp.dict(), owner_id=current_user.id)
+        print(f"⚠️ Geen coördinaten gevonden voor {comp.location}")
+    
     db.add(db_comp)
     db.commit()
     db.refresh(db_comp)
     return db_comp
-
 @app.put("/competitions/{comp_id}", response_model=schemas.Competition)
 def update_competition(comp_id: int, comp_update: schemas.CompetitionCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     db_comp = db.query(models.Competition).filter(models.Competition.id == comp_id, models.Competition.owner_id == current_user.id).first()
