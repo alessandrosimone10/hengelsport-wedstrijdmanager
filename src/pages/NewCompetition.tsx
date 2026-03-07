@@ -119,6 +119,21 @@ export default function NewCompetition() {
                 Voer de beschikbare peknummers in. Bij het toevoegen van deelnemers worden deze willekeurig verdeeld.
               </p>
             </div>
+            {/* Maximum deelnemers */}
+          <div className="space-y-2">
+        <Label htmlFor="maxParticipants">Maximaal aantal deelnemers (optioneel)</Label>
+      <Input
+      id="maxParticipants"
+      type="number"
+      min="1"
+      placeholder="bijv. 20"
+      value={form.maxParticipants}
+      onChange={e => setForm(f => ({ ...f, maxParticipants: e.target.value }))}
+    />
+  <p className="text-xs text-muted-foreground">
+    Laat leeg voor onbeperkt.
+  </p>
+</div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? 'Bezig...' : 'Wedstrijd aanmaken'}
             </Button>
