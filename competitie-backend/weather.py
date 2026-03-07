@@ -1,4 +1,4 @@
-from irm_kmi_api import IrmKmiApi
+from irm_kmi_api.api import IrmKmiApi
 import aiohttp
 from zoneinfo import ZoneInfo
 from typing import Optional, Dict
