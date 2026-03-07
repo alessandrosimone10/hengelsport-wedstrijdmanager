@@ -7,11 +7,10 @@ from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 from typing import List
 import random
-
 import models
 import schemas
 import auth
-from database import SessionLocal, engine
+from database import SessionLocal, engine random
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -97,14 +96,13 @@ def get_competition(comp_id: int, db: Session = Depends(get_db), current_user: m
 
 @app.post("/competitions", response_model=schemas.Competition)
 async def create_competition(comp: schemas.CompetitionCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    # Controleer of we coördinaten kunnen vinden voor de locatie
+    # Probeer coördinaten te vinden voor de locatie
     coordinates = await geocoding.get_coordinates_from_location(comp.location)
     
     if coordinates:
         lat, lon = coordinates
         db_comp = models.Competition(**comp.dict(), owner_id=current_user.id, latitude=lat, longitude=lon)
     else:
-        # Als geen coördinaten gevonden, sla dan op zonder (of met null)
         db_comp = models.Competition(**comp.dict(), owner_id=current_user.id)
         print(f"⚠️ Geen coördinaten gevonden voor {comp.location}")
     
@@ -112,6 +110,7 @@ async def create_competition(comp: schemas.CompetitionCreate, db: Session = Depe
     db.commit()
     db.refresh(db_comp)
     return db_comp
+    
 @app.put("/competitions/{comp_id}", response_model=schemas.Competition)
 def update_competition(comp_id: int, comp_update: schemas.CompetitionCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     db_comp = db.query(models.Competition).filter(models.Competition.id == comp_id, models.Competition.owner_id == current_user.id).first()
@@ -239,10 +238,6 @@ async def get_competition_weather(
     db: Session = Depends(get_db), 
     current_user: models.User = Depends(get_current_user)
 ):
-    """
-    Haalt actueel weer op voor de locatie van een wedstrijd.
-    """
-    # Haal de wedstrijd op
     comp = db.query(models.Competition).filter(
         models.Competition.id == comp_id, 
         models.Competition.owner_id == current_user.id
@@ -251,21 +246,18 @@ async def get_competition_weather(
     if not comp:
         raise HTTPException(404, "Competitie niet gevonden")
     
-    # Controleer of we coördinaten hebben
     if not comp.latitude or not comp.longitude:
-        # Probeer coördinaten alsnog te vinden (voor oude wedstrijden)
-        coordinates = await get_coordinates_from_location(comp.location)
+        # Probeer coördinaten alsnog te vinden
+        coordinates = await geocoding.get_coordinates_from_location(comp.location)
         if coordinates:
             comp.latitude, comp.longitude = coordinates
             db.commit()
-            print(f"✅ Coördinaten bijgewerkt voor wedstrijd {comp.id}")
         else:
             raise HTTPException(400, f"Geen coördinaten gevonden voor locatie: {comp.location}")
     
-    # Haal weer op
-   weather_data = await weather.get_weather_for_location(comp.latitude, comp.longitude)
+    weather_data = await weather.get_weather_for_location(comp.latitude, comp.longitude)
     
-    if not weather:
+    if not weather_data:
         raise HTTPException(503, "Weerdata niet beschikbaar op dit moment")
     
-    return weather
+    return weather_data
