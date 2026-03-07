@@ -2,7 +2,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001';
 
 // Helper om token aan request toe te voegen
-function authHeaders(): HeadersInit {
+export function authHeaders(): HeadersInit {  // <-- voeg export toe
   const token = localStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
