@@ -35,9 +35,10 @@ class CompetitionBase(BaseModel):
     prize_percentages: Optional[List[float]] = None
     fish_fund_percentage: Optional[float] = None
     custom_prize_pot: Optional[float] = None
+    max_participants: Optional[int] = None  # <-- deze regel toevoegen
 
     class Config:
-        orm_mode = True
+        orm_mode = True[int] = None  # <-- deze regel toevoegenstom_prize_pot: Optional[float] = None
 
 class ParticipantBase(BaseModel):
     name: str
