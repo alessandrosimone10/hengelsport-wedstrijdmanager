@@ -31,7 +31,8 @@ class Competition(Base):
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    owner = relationship("User", back_populates="competitions")
+    own# Zoek de Competition class en voeg deze regel toe bij de andere kolommen
+    max_participants = Column(Integer, nullable=True)er = relationship("User", back_populates="competitions")
 
     participants = relationship("Participant", back_populates="competition", cascade="all, delete-orphan")
 
