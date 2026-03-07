@@ -27,7 +27,9 @@ class Competition(Base):
     prize_percentages = Column(JSON, nullable=True)
     fish_fund_percentage = Column(Float, nullable=True)
     custom_prize_pot = Column(Float, nullable=True)
-
+    # In de Competition class, voeg deze regels toe bij de andere kolommen
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     owner = relationship("User", back_populates="competitions")
 
