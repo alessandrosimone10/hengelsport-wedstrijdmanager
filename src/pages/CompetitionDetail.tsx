@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -7,8 +7,9 @@ import {
   addParticipant,
   addCatch,
   deleteCompetition,
-  patchCompetition,   // vervang updateCompetition door patchCompetition
+  patchCompetition,
   assignNumbersRandomly,
+  authHeaders,
 } from '@/lib/api';
 import { getTotalWeight, formatWeight } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,11 @@ import {
   Trash2,
   Trophy,
   UserPlus,
+  Cloud,
+  CloudRain,
+  Sun,
+  Wind,
+  Droplets,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -52,11 +58,18 @@ const statusConfig = {
   completed: { label: 'Afgelopen', variant: 'outline' as const },
 };
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001';
+
 export default function CompetitionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const competitionId = Number(id);
+
+  // ----- Weer state -----
+  const [weather, setWeather] = useState<any>(null);
+  const [loadingWeather, setLoadingWeather] = useState(false);
+  const [weatherError, setWeatherError] = useState<string | null>(null);
 
   // ----- Query: competitie ophalen -----
   const {
@@ -68,6 +81,36 @@ export default function CompetitionDetail() {
     queryFn: () => fetchCompetition(competitionId),
     enabled: !isNaN(competitionId),
   });
+
+  // ----- Weer ophalen zodra competitie geladen is -----
+  useEffect(() => {
+    if (competition) {
+      fetchWeather();
+    }
+  }, [competition]);
+
+  const fetchWeather = async () => {
+    setLoadingWeather(true);
+    setWeatherError(null);
+    try {
+      const response = await fetch(`${API_BASE_URL}/competitions/${competitionId}/weather`, {
+        headers: authHeaders(),
+      });
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Weer niet beschikbaar voor deze locatie');
+        }
+        throw new Error('Kon weer niet ophalen');
+      }
+      const data = await response.json();
+      setWeather(data);
+    } catch (err) {
+      setWeatherError(err.message);
+      console.error('Weer fout:', err);
+    } finally {
+      setLoadingWeather(false);
+    }
+  };
 
   // ----- Mutaties -----
   const deleteMutation = useMutation({
@@ -148,28 +191,28 @@ export default function CompetitionDetail() {
     return <div className="p-8 text-center">Laden...</div>;
   }
 
-if (error) {
-  return (
-    <div className="py-20 text-center text-red-500">
-      <p>Fout bij ophalen: {error.message}</p>
-      <p>Controleer de console voor meer details.</p>
-      <Button variant="ghost" asChild className="mt-4">
-        <Link to="/competitions">Terug naar overzicht</Link>
-      </Button>
-    </div>
-  );
-}
+  if (error) {
+    return (
+      <div className="py-20 text-center text-red-500">
+        <p>Fout bij ophalen: {error.message}</p>
+        <p>Controleer de console voor meer details.</p>
+        <Button variant="ghost" asChild className="mt-4">
+          <Link to="/competitions">Terug naar overzicht</Link>
+        </Button>
+      </div>
+    );
+  }
 
-if (!competition) {
-  return (
-    <div className="py-20 text-center">
-      <p className="text-muted-foreground">Wedstrijd niet gevonden (geen data).</p>
-      <Button variant="ghost" asChild className="mt-4">
-        <Link to="/competitions">Terug naar overzicht</Link>
-      </Button>
-    </div>
-  );
-}
+  if (!competition) {
+    return (
+      <div className="py-20 text-center">
+        <p className="text-muted-foreground">Wedstrijd niet gevonden (geen data).</p>
+        <Button variant="ghost" asChild className="mt-4">
+          <Link to="/competitions">Terug naar overzicht</Link>
+        </Button>
+      </div>
+    );
+  }
 
   // ----- Data voorbereiding -----
   const status = statusConfig[competition.status];
@@ -425,6 +468,57 @@ if (!competition) {
           </Button>
         </div>
       </motion.div>
+
+      {/* Weer info */}
+      {weather && (
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {weather.condition_code === 'sun' && <Sun className="h-10 w-10 text-yellow-500" />}
+                {weather.condition_code === 'cloud' && <Cloud className="h-10 w-10 text-gray-500" />}
+                {weather.condition_code === 'rain' && <CloudRain className="h-10 w-10 text-blue-500" />}
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Huidig weer</p>
+                  <p className="text-2xl font-bold">{weather.temperature}°C</p>
+                  <p className="text-sm">{weather.condition}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="flex items-center gap-1">
+                  <Wind className="h-4 w-4 text-muted-foreground" />
+                  <span>{weather.wind_speed} km/h</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Droplets className="h-4 w-4 text-muted-foreground" />
+                  <span>{weather.humidity}%</span>
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Bijgewerkt: {new Date(weather.updated_at).toLocaleTimeString('nl-NL')}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {loadingWeather && (
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <p>Weer laden...</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {weatherError && (
+        <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950">
+          <CardContent className="pt-6">
+            <p className="text-yellow-700 dark:text-yellow-300 text-center">
+              ⚠️ Kon weer niet laden: {weatherError}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Prijzenpot */}
       {competition.participants.length > 0 && (
