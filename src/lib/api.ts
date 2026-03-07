@@ -2,22 +2,9 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001';
 
 // Helper om token aan request toe te voegen
-// Helper om token aan request toe te voegen
 function authHeaders(): HeadersInit {
   const token = localStorage.getItem('token');
-  alert('authHeaders token: ' + token);   // <-- alert 1
   return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-// ========== Competities ==========
-export async function fetchCompetitions() {
-  const token = localStorage.getItem('token');
-  alert('fetchCompetitions token: ' + token); // <-- alert 2
-  const res = await fetch(`${API_BASE_URL}/competitions`, {
-    headers: authHeaders(),
-  });
-  if (!res.ok) throw new Error('Ophalen competities mislukt');
-  return res.json();
 }
 
 // ========== Authenticatie ==========
@@ -53,6 +40,13 @@ export async function getCurrentUser() {
   return res.json();
 }
 
+export async function fetchCompetitions() {
+  const res = await fetch(`${API_BASE_URL}/competitions`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error('Ophalen competities mislukt');
+  return res.json();
+}
 
 
 export async function fetchCompetition(id: number) {
