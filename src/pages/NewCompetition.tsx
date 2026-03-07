@@ -31,13 +31,14 @@ export default function NewCompetition() {
       : undefined;
 
     try {
-      const newCompetition = await createCompetition({
-        name: form.name,
-        date: form.date,
-        location: form.location,
-        entry_fee,
-        available_numbers,
-      });
+     const newCompetition = await createCompetition({
+  name: form.name,
+  date: form.date,
+  location: form.location,
+  entry_fee,
+  available_numbers,
+  max_participants: form.maxParticipants ? Number(form.maxParticipants) : undefined,
+});
       toast.success('Wedstrijd aangemaakt!');
       navigate(`/competitions/${newCompetition.id}`);
     } catch (error) {
