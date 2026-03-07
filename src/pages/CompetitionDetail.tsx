@@ -495,9 +495,12 @@ export default function CompetitionDetail() {
                 </div>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Bijgewerkt: {new Date(weather.updated_at).toLocaleTimeString('nl-NL')}
-            </p>
+           <p className="text-xs text-muted-foreground mt-2">
+           Bijgewerkt: {weather.updated_at ? (() => {
+            const date = new Date(weather.updated_at);
+          return isNaN(date.getTime()) ? 'onbekend' : date.toLocaleTimeString('nl-NL');
+          })() : 'onbekend'}
+          </p>
           </CardContent>
         </Card>
       )}
