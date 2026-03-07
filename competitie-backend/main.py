@@ -232,3 +232,40 @@ def delete_catch(catch_id: int, db: Session = Depends(get_db), current_user: mod
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+@app.get("/competitions/{comp_id}/weather")
+async def get_competition_weather(
+    comp_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(get_current_user)
+):
+    """
+    Haalt actueel weer op voor de locatie van een wedstrijd.
+    """
+    # Haal de wedstrijd op
+    comp = db.query(models.Competition).filter(
+        models.Competition.id == comp_id, 
+        models.Competition.owner_id == current_user.id
+    ).first()
+    
+    if not comp:
+        raise HTTPException(404, "Competitie niet gevonden")
+    
+    # Controleer of we coördinaten hebben
+    if not comp.latitude or not comp.longitude:
+        # Probeer coördinaten alsnog te vinden (voor oude wedstrijden)
+        coordinates = await get_coordinates_from_location(comp.location)
+        if coordinates:
+            comp.latitude, comp.longitude = coordinates
+            db.commit()
+            print(f"✅ Coördinaten bijgewerkt voor wedstrijd {comp.id}")
+        else:
+            raise HTTPException(400, f"Geen coördinaten gevonden voor locatie: {comp.location}")
+    
+    # Haal weer op
+    weather = await get_weather_for_location(comp.latitude, comp.longitude)
+    
+    if not weather:
+        raise HTTPException(503, "Weerdata niet beschikbaar op dit moment")
+    
+    return weather
