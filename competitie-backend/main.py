@@ -87,15 +87,24 @@ def read_users_me(current_user: models.User = Depends(get_current_user)):
 def get_competitions(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     return db.query(models.Competition).filter(models.Competition.owner_id == current_user.id).all()
 
-@app.get("/competitions/{comp_id}", response_model=schemas.Competition)
-def get_competition(comp_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+@app.post("/competitions/{comp_id}/participants", response_model=schemas.Participant)
+def add_participant(comp_id: int, participant: schemas.ParticipantCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     comp = db.query(models.Competition).filter(
         models.Competition.id == comp_id,
         models.Competition.owner_id == current_user.id
     ).first()
     if not comp:
         raise HTTPException(404, "Competitie niet gevonden")
-    return comp
+
+    # NIEUW: controleer of het maximum aantal deelnemers is bereikt
+    if comp.max_participants and len(comp.participants) >= comp.max_participants:
+        raise HTTPException(400, "Maximum aantal deelnemers bereikt")
+
+    db_part = models.Participant(**participant.dict(), competition_id=comp_id, owner_id=current_user.id)
+    db.add(db_part)
+    db.commit()
+    db.refresh(db_part)
+    return db_part
 
 @app.post("/competitions", response_model=schemas.Competition)
 async def create_competition(comp: schemas.CompetitionCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
