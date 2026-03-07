@@ -1,5 +1,5 @@
-from .geocoding import get_coordinates_from_location
-from .weather import get_weather_for_location
+import geocoding
+import weather
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -98,7 +98,7 @@ def get_competition(comp_id: int, db: Session = Depends(get_db), current_user: m
 @app.post("/competitions", response_model=schemas.Competition)
 async def create_competition(comp: schemas.CompetitionCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     # Controleer of we coördinaten kunnen vinden voor de locatie
-    coordinates = await get_coordinates_from_location(comp.location)
+    coordinates = await geocoding.get_coordinates_from_location(comp.location)
     
     if coordinates:
         lat, lon = coordinates
@@ -263,7 +263,7 @@ async def get_competition_weather(
             raise HTTPException(400, f"Geen coördinaten gevonden voor locatie: {comp.location}")
     
     # Haal weer op
-    weather = await get_weather_for_location(comp.latitude, comp.longitude)
+   weather_data = await weather.get_weather_for_location(comp.latitude, comp.longitude)
     
     if not weather:
         raise HTTPException(503, "Weerdata niet beschikbaar op dit moment")
