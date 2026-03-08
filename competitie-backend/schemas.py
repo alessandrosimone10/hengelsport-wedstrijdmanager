@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional, Any
+from datetime import datetime  # <-- deze import toevoegen
 
 # ---------- Authentication ----------
 class UserBase(BaseModel):
@@ -85,6 +86,23 @@ class CompetitionUpdate(BaseModel):
 class CompetitionStatusUpdate(BaseModel):
     status: str
 
+# ---------- Pending participants ----------
+class PendingParticipantBase(BaseModel):
+    name: str
+    email: str
+
+class PendingParticipantCreate(PendingParticipantBase):
+    pass
+
+class PendingParticipant(PendingParticipantBase):
+    id: int
+    competition_id: int
+    status: str
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
 # ---------- Response schemas (inclusief relaties) ----------
 class Catch(CatchBase):
     id: int
@@ -107,78 +125,3 @@ class Competition(CompetitionBase):
 
     class Config:
         orm_mode = True
-
-# ---------- Pending participants ----------
-class PendingParticipantBase(BaseModel):
-    name: str
-    email: str
-
-class PendingParticipantCreate(PendingParticipantBase):
-    pass
-
-class PendingParticipant(PendingParticipantBase):
-    id: int
-    competition_id: int
-    status: str
-    created_at: datetime
-
-    class Config:
-        orm_mode = True
-
-@app.get("/admin/pending-participants", response_model=List[schemas.PendingParticipant])
-def get_pending_participants(
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    # Alleen admins mogen dit zien? Jij bent de enige gebruiker, dus geen extra check nodig.
-    # Maar je kunt eventueel `is_admin` gebruiken.
-    if not current_user.is_admin:
-        raise HTTPException(403, "Niet toegestaan")
-    return db.query(models.PendingParticipant).filter(models.PendingParticipant.status == "pending").all()
-
-@app.post("/admin/pending-participants/{pending_id}/approve")
-def approve_participant(
-    pending_id: int,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    if not current_user.is_admin:
-        raise HTTPException(403, "Niet toegestaan")
-    pending = db.query(models.PendingParticipant).filter(models.PendingParticipant.id == pending_id).first()
-    if not pending:
-        raise HTTPException(404, "Aanmelding niet gevonden")
-    if pending.status != "pending":
-        raise HTTPException(400, "Aanmelding is al behandeld")
-
-    # Controleer of er nog plaats is
-    comp = db.query(models.Competition).filter(models.Competition.id == pending.competition_id).first()
-    if comp.max_participants and len(comp.participants) >= comp.max_participants:
-        raise HTTPException(400, "Maximum aantal deelnemers bereikt")
-
-    # Maak echte deelnemer aan
-    new_participant = models.Participant(
-        name=pending.name,
-        competition_id=pending.competition_id,
-        owner_id=current_user.id  # De eigenaar van de wedstrijd is de beheerder (jij)
-    )
-    db.add(new_participant)
-    pending.status = "approved"
-    db.commit()
-    return {"message": "Goedgekeurd"}
-
-@app.post("/admin/pending-participants/{pending_id}/reject")
-def reject_participant(
-    pending_id: int,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    if not current_user.is_admin:
-        raise HTTPException(403, "Niet toegestaan")
-    pending = db.query(models.PendingParticipant).filter(models.PendingParticipant.id == pending_id).first()
-    if not pending:
-        raise HTTPException(404, "Aanmelding niet gevonden")
-    if pending.status != "pending":
-        raise HTTPException(400, "Aanmelding is al behandeld")
-    pending.status = "rejected"
-    db.commit()
-    return {"message": "Afgewezen"}
