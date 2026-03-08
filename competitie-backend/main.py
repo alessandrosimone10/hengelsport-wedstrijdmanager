@@ -33,6 +33,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/test2/{id}")
+def test2(id: int):
+    return {"id": id, "message": "test2 werkt"}
+
 @app.get("/test/{id}")
 async def test_route(id: int):
     return {"id": id, "message": "test werkt"}
