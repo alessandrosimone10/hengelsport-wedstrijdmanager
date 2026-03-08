@@ -49,7 +49,7 @@ export default function PendingParticipants() {
       queryClient.invalidateQueries({ queryKey: ['pending'] });
       toast.success('Goedgekeurd');
     },
-    onError: (err) => toast.error('Fout bij goedkeuren'),
+    onError: () => toast.error('Fout bij goedkeuren'),
   });
 
   const rejectMutation = useMutation({
@@ -58,11 +58,11 @@ export default function PendingParticipants() {
       queryClient.invalidateQueries({ queryKey: ['pending'] });
       toast.success('Afgewezen');
     },
-    onError: (err) => toast.error('Fout bij afwijzen'),
+    onError: () => toast.error('Fout bij afwijzen'),
   });
 
-  if (isLoading) return <div>Laden...</div>;
-  if (error) return <div>Fout: {error.message}</div>;
+  if (isLoading) return <div className="p-8 text-center">Laden...</div>;
+  if (error) return <div className="p-8 text-center text-red-500">Fout: {error.message}</div>;
 
   return (
     <div className="space-y-4">
