@@ -26,7 +26,7 @@ const App = () => (
             {/* Publieke routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/meedoen/:id" element={<PublicRegister />} /> {/* Nieuwe publieke route */}
+            <Route path="/meedoen/:id" element={<PublicRegister />} />
 
             {/* Beschermde routes */}
             <Route path="/" element={<PrivateRoute><Index /></PrivateRoute>} />
@@ -34,8 +34,9 @@ const App = () => (
             <Route path="/competitions/new" element={<PrivateRoute><NewCompetition /></PrivateRoute>} />
             <Route path="/competitions/:id" element={<PrivateRoute><CompetitionDetail /></PrivateRoute>} />
             <Route path="/fish-fund" element={<PrivateRoute><FishFund /></PrivateRoute>} />
-
+            
             {/* Catch-all */}
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
