@@ -27,12 +27,14 @@ class Competition(Base):
     prize_percentages = Column(JSON, nullable=True)
     fish_fund_percentage = Column(Float, nullable=True)
     custom_prize_pot = Column(Float, nullable=True)
-    max_participants = Column(Integer, nullable=True)  # <-- nieuwe kolom
+    max_participants = Column(Integer, nullable=True)
+    latitude = Column(Float, nullable=True)   # <-- toevoegen
+    longitude = Column(Float, nullable=True)  # <-- toevoegen
 
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    owner = relationship("User", back_populates="competitions")  # <-- deze regel stond foutief
-
+    owner = relationship("User", back_populates="competitions")
     participants = relationship("Participant", back_populates="competition", cascade="all, delete-orphan")
+
 class Participant(Base):
     __tablename__ = "participants"
     id = Column(Integer, primary_key=True, index=True)
