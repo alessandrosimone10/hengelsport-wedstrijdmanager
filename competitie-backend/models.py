@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, JSON
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, JSON, DateTime
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
@@ -29,8 +29,8 @@ class Competition(Base):
     fish_fund_percentage = Column(Float, nullable=True)
     custom_prize_pot = Column(Float, nullable=True)
     max_participants = Column(Integer, nullable=True)
-    latitude = Column(Float, nullable=True)   # <-- toevoegen
-    longitude = Column(Float, nullable=True)  # <-- toevoegen
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
 
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     owner = relationship("User", back_populates="competitions")
@@ -67,7 +67,7 @@ class PendingParticipant(Base):
     __tablename__ = "pending_participants"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    email = Column(String, nullable=False)  # E-mail voor contact
+    email = Column(String, nullable=False)
     competition_id = Column(Integer, ForeignKey("competitions.id"))
     status = Column(String, default="pending")  # pending, approved, rejected
     created_at = Column(DateTime, default=datetime.utcnow)
