@@ -12,7 +12,7 @@ import CompetitionDetail from "./pages/CompetitionDetail";
 import FishFund from "./pages/FishFund";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import PublicRegister from "./pages/PublicRegister"; // <-- import toevoegen
+import PublicRegister from "./pages/PublicRegister";
 import PendingParticipants from "./pages/PendingParticipants";
 import NotFound from "./pages/NotFound";
 
@@ -25,11 +25,10 @@ const App = () => (
         <Layout>
           <Routes>
             {/* Publieke routes */}
-            <Route path="/meedoen/:id" element={<PublicRegister />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-             <Route path="/ping" element={<div>pong</div>} />   {/* 👈 test */
-            
+            <Route path="/meedoen/:id" element={<PublicRegister />} />
+
             {/* Beschermde routes */}
             <Route path="/" element={<PrivateRoute><Index /></PrivateRoute>} />
             <Route path="/competitions" element={<PrivateRoute><Competitions /></PrivateRoute>} />
@@ -37,10 +36,8 @@ const App = () => (
             <Route path="/competitions/:id" element={<PrivateRoute><CompetitionDetail /></PrivateRoute>} />
             <Route path="/fish-fund" element={<PrivateRoute><FishFund /></PrivateRoute>} />
             <Route path="/admin/aanmeldingen" element={<PrivateRoute><PendingParticipants /></PrivateRoute>} />
-            <Route path="/ping" element={<div>pong</div>} />}
 
             {/* Catch-all */}
-            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
