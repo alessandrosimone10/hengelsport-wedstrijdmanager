@@ -159,9 +159,20 @@ def patch_competition(
     ).first()
     if not db_comp:
         raise HTTPException(404, "Competitie niet gevonden")
+    
     update_data = comp_update.dict(exclude_unset=True)
+    
+    # Converteer prize_percentages als het een string is
+    if 'prize_percentages' in update_data and isinstance(update_data['prize_percentages'], str):
+        import json
+        try:
+            update_data['prize_percentages'] = json.loads(update_data['prize_percentages'])
+        except json.JSONDecodeError:
+            raise HTTPException(400, "Ongeldig formaat voor prize_percentages")
+    
     for key, value in update_data.items():
         setattr(db_comp, key, value)
+    
     db.commit()
     db.refresh(db_comp)
     return db_comp
