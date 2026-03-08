@@ -106,6 +106,23 @@ def auth_test(current_user: models.User = Depends(get_current_user)):
     return {"email": current_user.email}
 
 # ---------- COMPETITIE ENDPOINTS ----------
+@app.patch("/competitions/{comp_id}/status")
+def update_competition_status(
+        comp_id: int,
+        status: str,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    comp = db.query(models.Competition).filter(
+        models.Competition.id == comp_id,
+        models.Competition.owner_id == current_user.id
+    ).first()
+    if not comp:
+        raise HTTPException(404, "Competitie niet gevonden")
+    comp.status = status
+    db.commit()
+    return {"status": comp.status}
+
 @app.get("/competitions", response_model=List[schemas.Competition])
 def get_competitions(
         db: Session = Depends(get_db),
