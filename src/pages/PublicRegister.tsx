@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 
-const API = import.meta.env.VITE_API_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://hengelsport-wedstrijdmanager.onrender.com';
+console.log('API_BASE_URL:', API_BASE_URL); // Voor debugging;
 
 export default function PublicRegister() {
   const { id } = useParams();
