@@ -23,7 +23,7 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     id: Optional[int] = None
 
-# ---------- Basis schema's ----------
+# ---------- Basis schema's voor competities, deelnemers, vangsten ----------
 class CompetitionBase(BaseModel):
     name: str
     date: str
@@ -35,10 +35,10 @@ class CompetitionBase(BaseModel):
     prize_percentages: Optional[List[float]] = None
     fish_fund_percentage: Optional[float] = None
     custom_prize_pot: Optional[float] = None
-    max_participants: Optional[int] = None  # <-- nieuw veld
+    max_participants: Optional[int] = None
 
     class Config:
-        orm_mode = True# <-- deze regel toevoegenstom_prize_pot: Optional[float] = None
+        orm_mode = True
 
 class ParticipantBase(BaseModel):
     name: str
@@ -55,7 +55,7 @@ class CatchBase(BaseModel):
     class Config:
         orm_mode = True
 
-# ---------- Create schema's ----------
+# ---------- Create schemas ----------
 class CompetitionCreate(CompetitionBase):
     pass
 
@@ -65,11 +65,7 @@ class ParticipantCreate(ParticipantBase):
 class CatchCreate(CatchBase):
     pass
 
-# ---------- Update schema (voor PATCH) ----------
-
-class CompetitionStatusUpdate(BaseModel):
-    status: str
-    
+# ---------- Update schemas ----------
 class CompetitionUpdate(BaseModel):
     name: Optional[str] = None
     date: Optional[str] = None
@@ -81,11 +77,15 @@ class CompetitionUpdate(BaseModel):
     prize_percentages: Optional[List[float]] = None
     fish_fund_percentage: Optional[float] = None
     custom_prize_pot: Optional[float] = None
+    max_participants: Optional[int] = None
 
     class Config:
         orm_mode = True
 
-# ---------- Response schema's (inclusief relaties) ----------
+class CompetitionStatusUpdate(BaseModel):
+    status: str
+
+# ---------- Response schemas (inclusief relaties) ----------
 class Catch(CatchBase):
     id: int
     participant_id: int
