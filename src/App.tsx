@@ -28,6 +28,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/meedoen/:id" element={<PublicRegister />} />
+             <Route path="/ping" element={<div>pong</div>} />   {/* 👈 test */}
 
             {/* Beschermde routes */}
             <Route path="/" element={<PrivateRoute><Index /></PrivateRoute>} />
