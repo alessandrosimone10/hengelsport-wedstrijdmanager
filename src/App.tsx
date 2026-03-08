@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { PrivateRoute } from "@/components/PrivateRoute";
+
 import Layout from "./components/Layout";
+
 import Index from "./pages/Index";
 import Competitions from "./pages/Competitions";
 import NewCompetition from "./pages/NewCompetition";
@@ -21,13 +23,12 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+
       <BrowserRouter>
-        <Layout>
-          <Routes>
-            {/* Publieke routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/meedoen/:id" element={<PublicRegister />} />
+        <Routes>
+
+          {/* Layout wrapper */}
+          <Route element={<Layout />}>
 
             {/* Beschermde routes */}
             <Route path="/" element={<PrivateRoute><Index /></PrivateRoute>} />
@@ -37,11 +38,19 @@ const App = () => (
             <Route path="/fish-fund" element={<PrivateRoute><FishFund /></PrivateRoute>} />
             <Route path="/admin/aanmeldingen" element={<PrivateRoute><PendingParticipants /></PrivateRoute>} />
 
-            {/* Catch-all */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Layout>
+          </Route>
+
+          {/* Publieke routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/meedoen/:id" element={<PublicRegister />} />
+
+          {/* Catch-all */}
+          <Route path="*" element={<NotFound />} />
+
+        </Routes>
       </BrowserRouter>
+
     </TooltipProvider>
   </AuthProvider>
 );
