@@ -128,6 +128,25 @@ def get_competition(
     if not comp:
         raise HTTPException(404, "Competitie niet gevonden")
     return comp
+@app.patch("/competitions/{comp_id}", response_model=schemas.Competition)
+def patch_competition(
+        comp_id: int,
+        comp_update: schemas.CompetitionUpdate,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    db_comp = db.query(models.Competition).filter(
+        models.Competition.id == comp_id,
+        models.Competition.owner_id == current_user.id
+    ).first()
+    if not db_comp:
+        raise HTTPException(404, "Competitie niet gevonden")
+    update_data = comp_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_comp, key, value)
+    db.commit()
+    db.refresh(db_comp)
+    return db_comp
 
 @app.post("/competitions", response_model=schemas.Competition)
 async def create_competition(
