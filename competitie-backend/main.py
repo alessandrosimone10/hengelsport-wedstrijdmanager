@@ -33,7 +33,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+@app.get("/test/{id}")
+async def test_route(id: int):
+    return {"id": id, "message": "test werkt"}
 # ---------- DATABASE ----------
 def get_db():
     db = SessionLocal()
