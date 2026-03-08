@@ -260,7 +260,7 @@ def delete_participant(
 @app.post("/public/competitions/{comp_id}/register")
 def public_register(
     comp_id: int,
-    participant: schemas.PendingParticipantCreate,
+    participant: schemas.PendingParticipantBase,
     db: Session = Depends(get_db)
 ):
     comp = db.query(models.Competition).filter(models.Competition.id == comp_id).first()
