@@ -61,3 +61,14 @@ class Catch(Base):
 
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     owner = relationship("User", back_populates="catches")
+
+class PendingParticipant(Base):
+    __tablename__ = "pending_participants"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    email = Column(String, nullable=False)  # E-mail voor contact
+    competition_id = Column(Integer, ForeignKey("competitions.id"))
+    status = Column(String, default="pending")  # pending, approved, rejected
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    competition = relationship("Competition")
