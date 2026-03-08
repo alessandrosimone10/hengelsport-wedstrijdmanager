@@ -93,9 +93,10 @@ export async function deleteCompetition(id: number) {
 }
 
 export async function updateCompetitionStatus(id: number, status: string) {
-  const res = await fetch(`${API_BASE_URL}/competitions/${id}/status?status=${status}`, {
+  const res = await fetch(`${API_BASE_URL}/competitions/${id}/status`, {
     method: 'PATCH',
-    headers: authHeaders(),
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ status }),
   });
   if (!res.ok) throw new Error('Status wijzigen mislukt');
   return res.json();
