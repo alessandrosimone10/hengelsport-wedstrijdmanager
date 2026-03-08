@@ -256,7 +256,36 @@ def delete_participant(
     db.delete(part)
     db.commit()
     return {"ok": True}
+# ---------- PUBLIEKE INSCHRIJVING ----------
+@app.post("/public/competitions/{comp_id}/register")
+def public_register(
+    comp_id: int,
+    participant: schemas.ParticipantCreate,
+    db: Session = Depends(get_db)
+):
+    comp = db.query(models.Competition).filter(
+        models.Competition.id == comp_id
+    ).first()
 
+    if not comp:
+        raise HTTPException(404, "Competitie niet gevonden")
+
+    if comp.max_participants and len(comp.participants) >= comp.max_participants:
+        raise HTTPException(400, "Maximum deelnemers bereikt")
+
+    new_participant = models.Participant(
+        name=participant.name,
+        email=participant.email,
+        competition_id=comp_id,
+        approved=False   # admin moet goedkeuren
+    )
+
+    db.add(new_participant)
+    db.commit()
+    db.refresh(new_participant)
+
+    return {"message": "Aanmelding ontvangen"}
+    
 # ---------- VANGSTEN ----------
 @app.post("/participants/{part_id}/catches", response_model=schemas.Catch)
 def add_catch(
