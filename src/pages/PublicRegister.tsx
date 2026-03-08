@@ -13,24 +13,28 @@ export default function PublicRegister() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const res = await fetch(`${API_BASE_URL}/public/competitions/${id}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || 'Inschrijven mislukt');
-      }
-      setSubmitted(true);
-      toast.success('Aanmelding ontvangen! Je hoort snel iets.');
-    } catch (err) {
-      toast.error('Er ging iets mis. Probeer het later opnieuw.');
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  alert('Formulier verzonden!'); // Controleer of deze verschijnt
+  console.log('Verstuur naar:', `${API_BASE_URL}/public/competitions/${id}/register`, { name, email });
+  try {
+    const res = await fetch(`${API_BASE_URL}/public/competitions/${id}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email }),
+    });
+    alert(`Response status: ${res.status}`); // Toon status
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Inschrijven mislukt');
     }
-  };
+    setSubmitted(true);
+    toast.success('Aanmelding ontvangen! Je hoort snel iets.');
+  } catch (err) {
+    alert('Fout: ' + err.message); // Toon foutmelding
+    toast.error('Er ging iets mis. Probeer het later opnieuw.');
+  }
+};
 
   if (submitted) {
     return (
