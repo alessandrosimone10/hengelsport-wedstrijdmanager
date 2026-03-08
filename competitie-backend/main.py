@@ -106,10 +106,10 @@ def auth_test(current_user: models.User = Depends(get_current_user)):
     return {"email": current_user.email}
 
 # ---------- COMPETITIE ENDPOINTS ----------
-@app.patch("/competitions/{comp_id}/status")
+@app.patch("/competitions/{comp_id}/status", response_model=schemas.Competition)
 def update_competition_status(
         comp_id: int,
-        status: str,
+        data: schemas.CompetitionStatusUpdate,
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
@@ -119,9 +119,10 @@ def update_competition_status(
     ).first()
     if not comp:
         raise HTTPException(404, "Competitie niet gevonden")
-    comp.status = status
+    comp.status = data.status
     db.commit()
-    return {"status": comp.status}
+    db.refresh(comp)
+    return comp
 
 @app.get("/competitions", response_model=List[schemas.Competition])
 def get_competitions(
