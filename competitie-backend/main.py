@@ -278,7 +278,7 @@ def public_register(
     db.add(pending)
     db.commit()
     db.refresh(pending)
-    return {"message": "Aanmelding ontvangen, wacht op goedkeuring", "id": pending.id}}
+    return {"message": "Aanmelding ontvangen, wacht op goedkeuring", "id": pending.id}
     
 # ---------- VANGSTEN ----------
 @app.post("/participants/{part_id}/catches", response_model=schemas.Catch)
