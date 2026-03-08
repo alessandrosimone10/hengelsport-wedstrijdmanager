@@ -141,20 +141,9 @@ def get_competitions(
         models.Competition.owner_id == current_user.id
     ).all()
 
-@app.get("/competitions/{comp_id}", response_model=schemas.Competition)
-def get_competition_v2(
-        comp_id: int,
-        db: Session = Depends(get_db),
-        current_user: models.User = Depends(get_current_user)
-):
-    comp = db.query(models.Competition).filter(
-        models.Competition.id == comp_id,
-        models.Competition.owner_id == current_user.id
-    ).first()
-    if not comp:
-        raise HTTPException(404, "Competitie niet gevonden")
-    return comp
-
+@app.get("/competitions/{comp_id}")
+def get_competition_test(comp_id: int):
+    return {"id": comp_id, "message": "simpele competitie test"}
 
 @app.post("/competitions", response_model=schemas.Competition)
 async def create_competition(
