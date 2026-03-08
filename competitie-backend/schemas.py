@@ -66,6 +66,10 @@ class CatchCreate(CatchBase):
     pass
 
 # ---------- Update schema (voor PATCH) ----------
+
+class CompetitionStatusUpdate(BaseModel):
+    status: str
+    
 class CompetitionUpdate(BaseModel):
     name: Optional[str] = None
     date: Optional[str] = None
