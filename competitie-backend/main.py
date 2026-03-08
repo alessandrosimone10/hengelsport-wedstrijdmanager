@@ -260,31 +260,25 @@ def delete_participant(
 @app.post("/public/competitions/{comp_id}/register")
 def public_register(
     comp_id: int,
-    participant: schemas.ParticipantCreate,
+    participant: schemas.PendingParticipantCreate,
     db: Session = Depends(get_db)
 ):
-    comp = db.query(models.Competition).filter(
-        models.Competition.id == comp_id
-    ).first()
-
+    comp = db.query(models.Competition).filter(models.Competition.id == comp_id).first()
     if not comp:
         raise HTTPException(404, "Competitie niet gevonden")
-
+    # Optioneel: controleer maximum aantal deelnemers
     if comp.max_participants and len(comp.participants) >= comp.max_participants:
-        raise HTTPException(400, "Maximum deelnemers bereikt")
-
-    new_participant = models.Participant(
+        raise HTTPException(400, "Maximum aantal deelnemers bereikt")
+    pending = models.PendingParticipant(
         name=participant.name,
         email=participant.email,
         competition_id=comp_id,
-        approved=False   # admin moet goedkeuren
+        status="pending"
     )
-
-    db.add(new_participant)
+    db.add(pending)
     db.commit()
-    db.refresh(new_participant)
-
-    return {"message": "Aanmelding ontvangen"}
+    db.refresh(pending)
+    return {"message": "Aanmelding ontvangen, wacht op goedkeuring", "id": pending.id}}
     
 # ---------- VANGSTEN ----------
 @app.post("/participants/{part_id}/catches", response_model=schemas.Catch)
