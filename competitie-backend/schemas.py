@@ -91,8 +91,9 @@ class PendingParticipantBase(BaseModel):
     name: str
     email: str
 
-class PendingParticipantCreate(PendingParticipantBase):
-    pass
+class ParticipantCreate(BaseModel):
+    name: str
+    email: str
 
 class PendingParticipant(PendingParticipantBase):
     id: int
