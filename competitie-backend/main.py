@@ -34,6 +34,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/auth-test")
+def auth_test(current_user: models.User = Depends(get_current_user)):
+    return {"email": current_user.email}
+
 @app.get("/test2/{id}")
 def test2(id: int):
     return {"id": id, "message": "test2 werkt"}
