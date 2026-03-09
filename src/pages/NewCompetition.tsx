@@ -12,10 +12,16 @@ import { toast } from 'sonner';
 
 export default function NewCompetition() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ 
-  name: '', date: '', location: '', entryFee: '', numbers: '', maxParticipants: '',
-  startTime: '', endTime: ''   // nieuw
-});
+  const [form, setForm] = useState({
+    name: '',
+    date: '',
+    location: '',
+    entryFee: '',
+    numbers: '',
+    maxParticipants: '',
+    startTime: '',
+    endTime: ''
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,23 +33,25 @@ export default function NewCompetition() {
 
     setIsSubmitting(true);
 
-    // Data voorbereiden voor backend (underscores)
     const entry_fee = form.entryFee ? Number(form.entryFee) : undefined;
     const available_numbers = form.numbers
       ? form.numbers.split(/[,;\s]+/).map(Number).filter(n => !isNaN(n) && n > 0)
       : undefined;
+    const max_participants = form.maxParticipants ? Number(form.maxParticipants) : undefined;
+    const start_time = form.startTime || undefined;
+    const end_time = form.endTime || undefined;
 
     try {
-  const newCompetition = await createCompetition({
-  name: form.name,
-  date: form.date,
-  location: form.location,
-  entry_fee: entryFee,
-  available_numbers: availableNumbers,
-  max_participants: form.maxParticipants ? Number(form.maxParticipants) : undefined,
-  start_time: form.startTime || undefined,
-  end_time: form.endTime || undefined,
-});
+      const newCompetition = await createCompetition({
+        name: form.name,
+        date: form.date,
+        location: form.location,
+        entry_fee,
+        available_numbers,
+        max_participants,
+        start_time,
+        end_time
+      });
       toast.success('Wedstrijd aangemaakt!');
       navigate(`/competitions/${newCompetition.id}`);
     } catch (error) {
@@ -125,39 +133,37 @@ export default function NewCompetition() {
                 Voer de beschikbare peknummers in. Bij het toevoegen van deelnemers worden deze willekeurig verdeeld.
               </p>
             </div>
-            {/* Maximum deelnemers */}
-          <div className="space-y-2">
-        <Label htmlFor="maxParticipants">Maximaal aantal deelnemers (optioneel)</Label>
-      <Input
-      id="maxParticipants"
-      type="number"
-      min="1"
-      placeholder="bijv. 20"
-      value={form.maxParticipants}
-      onChange={e => setForm(f => ({ ...f, maxParticipants: e.target.value }))}
-    />
-  <p className="text-xs text-muted-foreground">
-    Laat leeg voor onbeperkt.
-  </p>
-</div>
             <div className="space-y-2">
-  <Label htmlFor="startTime">Starttijd (optioneel, bijv. 14:00)</Label>
-  <Input
-    id="startTime"
-    type="time"
-    value={form.startTime}
-    onChange={e => setForm(f => ({ ...f, startTime: e.target.value }))}
-  />
-</div>
-<div className="space-y-2">
-  <Label htmlFor="endTime">Eindtijd (optioneel)</Label>
-  <Input
-    id="endTime"
-    type="time"
-    value={form.endTime}
-    onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))}
-  />
-</div>
+              <Label htmlFor="maxParticipants">Maximaal aantal deelnemers (optioneel)</Label>
+              <Input
+                id="maxParticipants"
+                type="number"
+                min="1"
+                placeholder="bijv. 20"
+                value={form.maxParticipants}
+                onChange={e => setForm(f => ({ ...f, maxParticipants: e.target.value }))}
+              />
+              <p className="text-xs text-muted-foreground">Laat leeg voor onbeperkt.</p>
+            </div>
+            {/* Start- en eindtijd */}
+            <div className="space-y-2">
+              <Label htmlFor="startTime">Starttijd (optioneel, bijv. 14:00)</Label>
+              <Input
+                id="startTime"
+                type="time"
+                value={form.startTime}
+                onChange={e => setForm(f => ({ ...f, startTime: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="endTime">Eindtijd (optioneel)</Label>
+              <Input
+                id="endTime"
+                type="time"
+                value={form.endTime}
+                onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))}
+              />
+            </div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? 'Bezig...' : 'Wedstrijd aanmaken'}
             </Button>
