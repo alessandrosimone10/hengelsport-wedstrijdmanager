@@ -17,7 +17,6 @@ import schemas
 import auth
 from database import SessionLocal, engine
 from email import send_approval_email, send_rejection_email
-from email import send_approval_email, send_rejection_email
 
 # Fix async issues on some hosting platforms
 asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
@@ -330,10 +329,32 @@ def approve_pending(
     pending_id: int,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
-     # Verstuur e‑mail
-    send_approval_email(pending.email, comp.name)
-    return {"message": "Goedgekeurd"}
 ):
+    pending = db.query(models.PendingParticipant).filter(models.PendingParticipant.id == pending_id).first()
+    if not pending:
+        raise HTTPException(404, "Aanmelding niet gevonden")
+    if pending.status != "pending":
+        raise HTTPException(400, "Aanmelding is al behandeld")
+
+    # Controleer of de wedstrijd nog plaats heeft
+    comp = db.query(models.Competition).filter(models.Competition.id == pending.competition_id).first()
+    if comp.max_participants and len(comp.participants) >= comp.max_participants:
+        raise HTTPException(400, "Maximum aantal deelnemers bereikt")
+
+    # Maak echte deelnemer aan
+    new_participant = models.Participant(
+        name=pending.name,
+        competition_id=pending.competition_id,
+        owner_id=current_user.id
+    )
+    db.add(new_participant)
+    pending.status = "approved"
+    db.commit()
+
+    # Verstuur e‑mail
+    send_approval_email(pending.email, comp.name)
+
+    return {"message": "Goedgekeurd"}
 
     pending = db.query(models.PendingParticipant).filter(models.PendingParticipant.id == pending_id).first()
     if not pending:
@@ -362,16 +383,19 @@ def reject_pending(
     pending_id: int,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
-        send_rejection_email(pending.email, comp.name)
-    return {"message": "Afgewezen"}
 ):
     pending = db.query(models.PendingParticipant).filter(models.PendingParticipant.id == pending_id).first()
     if not pending:
         raise HTTPException(404, "Aanmelding niet gevonden")
     if pending.status != "pending":
         raise HTTPException(400, "Aanmelding is al behandeld")
+
     pending.status = "rejected"
     db.commit()
+
+    comp = db.query(models.Competition).filter(models.Competition.id == pending.competition_id).first()
+    send_rejection_email(pending.email, comp.name if comp else "Onbekende wedstrijd")
+
     return {"message": "Afgewezen"}
 
 # ---------- VANGSTEN ----------
