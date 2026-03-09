@@ -2,17 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Fish, Trophy, Home, Plus, Wallet, UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
-import { useQuery } from '@tanstack/react-query';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL;
-
-// Helper om token aan request toe te voegen (indien nodig voor deze fetch)
-function authHeaders() {
-  const token = localStorage.getItem('token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
 
 const navItems = [
   { to: '/', icon: Home, label: 'Dashboard' },
@@ -24,25 +14,6 @@ const navItems = [
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { user, logout } = useAuth();
-
-  // Haal het aantal openstaande aanmeldingen op (alleen als ingelogd)
-  const { data: pendingCount = 0 } = useQuery({
-    queryKey: ['pending-count'],
-    queryFn: async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/admin/pending-participants`, {
-          headers: authHeaders(),
-        });
-        if (!res.ok) return 0;
-        const data = await res.json();
-        return data.length;
-      } catch {
-        return 0;
-      }
-    },
-    enabled: !!user, // alleen ophalen als gebruiker ingelogd is
-    refetchInterval: 30000, // elke 30 seconden vernieuwen (optioneel)
-  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -97,11 +68,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               >
                 <UserPlus className="h-4 w-4" />
                 <span className="hidden sm:inline">Aanmeldingen</span>
-                {pendingCount > 0 && (
-                  <Badge variant="destructive" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
-                    {pendingCount}
-                  </Badge>
-                )}
                 {location.pathname === '/admin/aanmeldingen' && (
                   <motion.div
                     layoutId="nav-indicator"
