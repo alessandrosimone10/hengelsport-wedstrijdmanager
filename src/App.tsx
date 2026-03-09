@@ -39,7 +39,11 @@ const App = () => (
             <Route path="/competitions/new" element={<PrivateRoute><NewCompetition /></PrivateRoute>} />
             <Route path="/competitions/:id" element={<PrivateRoute><CompetitionDetail /></PrivateRoute>} />
             <Route path="/fish-fund" element={<PrivateRoute><FishFund /></PrivateRoute>} />
-            <Route path="/admin/aanmeldingen" element={<PrivateRoute><PendingParticipants /></PrivateRoute>} />
+            <Route path="/admin/aanmeldingen" element={
+            <Suspense fallback={<div className="p-8 text-center">Laden...</div>}>
+            <PrivateRoute><PendingParticipants /></PrivateRoute>
+            </Suspense>
+            } />
 
           </Route>
 
