@@ -17,6 +17,7 @@ import schemas
 import auth
 from database import SessionLocal, engine
 from email import send_approval_email, send_rejection_email
+from email import send_approval_email, send_rejection_email
 
 # Fix async issues on some hosting platforms
 asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
@@ -297,6 +298,24 @@ def get_public_competitions(db: Session = Depends(get_db)):
         for c in competitions
     ]
 
+@app.get("/public/my-applications")
+def get_my_applications(email: str, db: Session = Depends(get_db)):
+    if not email:
+        raise HTTPException(400, "E-mailadres is verplicht")
+    applications = db.query(models.PendingParticipant).filter(
+        models.PendingParticipant.email == email
+    ).all()
+    result = []
+    for app in applications:
+        comp = db.query(models.Competition).filter(models.Competition.id == app.competition_id).first()
+        result.append({
+            "id": app.id,
+            "competition_name": comp.name if comp else "Onbekend",
+            "competition_date": comp.date if comp else None,
+            "status": app.status,
+            "created_at": app.created_at.isoformat() if app.created_at else None
+        })
+    return result
 # ---------- ADMIN: OPENSTAANDE AANMELDINGEN ----------
 @app.get("/admin/pending-participants", response_model=List[schemas.PendingParticipant])
 def get_pending_participants(
