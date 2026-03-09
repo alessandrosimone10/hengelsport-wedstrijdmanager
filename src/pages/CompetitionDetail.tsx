@@ -140,12 +140,11 @@ const addParticipantMutation = useMutation({
     toast.success('Deelnemer toegevoegd');
   },
   onError: (err: Error) => {
-    // Toon de fout in een alert voor debugging
-    alert('Fout bij toevoegen: ' + err.message);
+    alert('Fout bij toevoegen: ' + err.message);  // tijdelijk voor debug
     toast.error(`Toevoegen mislukt: ${err.message}`);
   },
 });
-
+  
   const addCatchMutation = useMutation({
     mutationFn: ({
       participantId,
