@@ -63,7 +63,10 @@ export async function createCompetition(data: {
   location: string;
   entry_fee?: number;
   available_numbers?: number[];
+  start_time?: string;   // nieuw
+  end_time?: string;     // nieuw
 }) {
+  
   const res = await fetch(`${API_BASE_URL}/competitions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
