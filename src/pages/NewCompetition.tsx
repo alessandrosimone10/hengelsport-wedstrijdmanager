@@ -15,7 +15,7 @@ export default function NewCompetition() {
   const [form, setForm] = useState({ 
   name: '', date: '', location: '', entryFee: '', numbers: '', maxParticipants: '',
   startTime: '', endTime: ''   // nieuw
-});});
+});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
