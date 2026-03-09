@@ -45,17 +45,6 @@ class ParticipantBase(BaseModel):
     name: str
     number: Optional[int] = None
 
-    class Config:
-        orm_mode = True
-
-class CatchBase(BaseModel):
-    species: str
-    weight: int
-    time: Optional[str] = None
-
-    class Config:
-        orm_mode = True
-
 # ---------- Create schemas ----------
 class CompetitionCreate(CompetitionBase):
     pass
