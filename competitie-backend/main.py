@@ -16,7 +16,7 @@ import models
 import schemas
 import auth
 from database import SessionLocal, engine
-from email import send_approval_email, send_rejection_email
+from email import send_approval_email, send_rejection_email  # één keer importeren
 
 # Fix async issues on some hosting platforms
 asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
@@ -28,7 +28,7 @@ app = FastAPI(title="Competitie API")
 # ---------- CORS ----------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],           # Voor productie vervangen door specifieke domeinen
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -66,7 +66,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 # ---------- WEER CACHE ----------
 weather_cache = {}
-CACHE_DURATION = 600  # 10 minuten
+CACHE_DURATION = 600
 
 # ---------- AUTHENTICATIE ENDPOINTS ----------
 @app.post("/register", response_model=schemas.User)
@@ -93,7 +93,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 def get_me(current_user: models.User = Depends(get_current_user)):
     return current_user
 
-# ---------- TEST ENDPOINTS (optioneel) ----------
+# ---------- TEST ENDPOINTS ----------
 @app.get("/test/{id}")
 async def test_route(id: int):
     return {"id": id, "message": "test werkt"}
@@ -147,6 +147,7 @@ def get_competition(
     if not comp:
         raise HTTPException(404, "Competitie niet gevonden")
     return comp
+
 @app.patch("/competitions/{comp_id}", response_model=schemas.Competition)
 def patch_competition(
         comp_id: int,
@@ -163,7 +164,6 @@ def patch_competition(
     
     update_data = comp_update.dict(exclude_unset=True)
     
-    # Converteer prize_percentages als het een string is
     if 'prize_percentages' in update_data and isinstance(update_data['prize_percentages'], str):
         import json
         try:
@@ -257,6 +257,7 @@ def delete_participant(
     db.delete(part)
     db.commit()
     return {"ok": True}
+
 # ---------- PUBLIEKE INSCHRIJVING ----------
 @app.post("/public/competitions/{comp_id}/register")
 def public_register(
@@ -267,7 +268,6 @@ def public_register(
     comp = db.query(models.Competition).filter(models.Competition.id == comp_id).first()
     if not comp:
         raise HTTPException(404, "Competitie niet gevonden")
-    # Optioneel: controleer maximum aantal deelnemers
     if comp.max_participants and len(comp.participants) >= comp.max_participants:
         raise HTTPException(400, "Maximum aantal deelnemers bereikt")
     pending = models.PendingParticipant(
@@ -315,13 +315,13 @@ def get_my_applications(email: str, db: Session = Depends(get_db)):
             "created_at": app.created_at.isoformat() if app.created_at else None
         })
     return result
+
 # ---------- ADMIN: OPENSTAANDE AANMELDINGEN ----------
 @app.get("/admin/pending-participants", response_model=List[schemas.PendingParticipant])
 def get_pending_participants(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    # Alleen ingelogde gebruikers (jij) mogen dit zien. Optioneel: check op is_admin
     return db.query(models.PendingParticipant).filter(models.PendingParticipant.status == "pending").all()
 
 @app.post("/admin/pending-participants/{pending_id}/approve")
@@ -336,12 +336,10 @@ def approve_pending(
     if pending.status != "pending":
         raise HTTPException(400, "Aanmelding is al behandeld")
 
-    # Controleer of de wedstrijd nog plaats heeft
     comp = db.query(models.Competition).filter(models.Competition.id == pending.competition_id).first()
     if comp.max_participants and len(comp.participants) >= comp.max_participants:
         raise HTTPException(400, "Maximum aantal deelnemers bereikt")
 
-    # Maak echte deelnemer aan
     new_participant = models.Participant(
         name=pending.name,
         competition_id=pending.competition_id,
@@ -351,31 +349,8 @@ def approve_pending(
     pending.status = "approved"
     db.commit()
 
-    # Verstuur e‑mail
     send_approval_email(pending.email, comp.name)
 
-    return {"message": "Goedgekeurd"}
-
-    pending = db.query(models.PendingParticipant).filter(models.PendingParticipant.id == pending_id).first()
-    if not pending:
-        raise HTTPException(404, "Aanmelding niet gevonden")
-    if pending.status != "pending":
-        raise HTTPException(400, "Aanmelding is al behandeld")
-
-    # Controleer of de wedstrijd nog plaats heeft
-    comp = db.query(models.Competition).filter(models.Competition.id == pending.competition_id).first()
-    if comp.max_participants and len(comp.participants) >= comp.max_participants:
-        raise HTTPException(400, "Maximum aantal deelnemers bereikt")
-
-    # Maak echte deelnemer aan
-    new_participant = models.Participant(
-        name=pending.name,
-        competition_id=pending.competition_id,
-        owner_id=current_user.id  # of comp.owner_id? Jij bent de eigenaar.
-    )
-    db.add(new_participant)
-    pending.status = "approved"
-    db.commit()
     return {"message": "Goedgekeurd"}
 
 @app.post("/admin/pending-participants/{pending_id}/reject")
