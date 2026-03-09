@@ -280,6 +280,22 @@ def public_register(
     db.refresh(pending)
     return {"message": "Aanmelding ontvangen, wacht op goedkeuring", "id": pending.id}
 
+@app.get("/public/competitions")
+def get_public_competitions(db: Session = Depends(get_db)):
+    competitions = db.query(models.Competition).all()
+    return [
+        {
+            "id": c.id,
+            "name": c.name,
+            "date": c.date,
+            "location": c.location,
+            "status": c.status,
+            "max_participants": c.max_participants,
+            "current_participants": len(c.participants)
+        }
+        for c in competitions
+    ]
+
 # ---------- ADMIN: OPENSTAANDE AANMELDINGEN ----------
 @app.get("/admin/pending-participants", response_model=List[schemas.PendingParticipant])
 def get_pending_participants(
