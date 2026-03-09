@@ -244,19 +244,21 @@ const addParticipantMutation = useMutation({
 
  
   // ----- Handlers -----
-  const handleAddParticipant = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = new FormData(e.currentTarget);
-    const name = form.get('name') as string;
-    const number = form.get('number') as string;
-    if (!name.trim()) return;
-    addParticipantMutation.mutate({
-      competitionId,
-      name: name.trim(),
-      number: number ? Number(number) : undefined,
-    });
-    e.currentTarget.reset();
+ const handleAddParticipant = (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  const form = new FormData(e.currentTarget);
+  const name = form.get('name') as string;
+  const number = form.get('number') as string;
+  if (!name.trim()) return;
+  const payload = {
+    competitionId,
+    name: name.trim(),
+    number: number ? Number(number) : undefined,
   };
+  alert('Verzonden data: ' + JSON.stringify(payload)); // ← tijdelijk
+  addParticipantMutation.mutate(payload);
+  e.currentTarget.reset();
+};
 
   const handleRandomAssign = () => {
     randomAssignMutation.mutate(competitionId);
