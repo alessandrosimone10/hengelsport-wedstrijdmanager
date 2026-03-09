@@ -31,13 +31,14 @@ export default function PublicRegister() {
     }
     setSubmitted(true);
     toast.success('Aanmelding ontvangen! Je hoort snel iets.');
-} catch (err) {
-  if (err.message.includes('Maximum')) {
-    toast.error('Deze wedstrijd is volzet.');
-  } else {
-    toast.error('Er ging iets mis. Probeer het later opnieuw.');
-  }
-}
+    } catch (err) {
+      if (err.message.includes('Maximum')) {
+        toast.error('Deze wedstrijd is volzet.');
+      } else {
+        toast.error('Er ging iets mis. Probeer het later opnieuw.');
+      }
+    }
+  };
 
   if (submitted) {
     return (
