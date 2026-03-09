@@ -19,6 +19,7 @@ import PendingParticipants from "./pages/PendingParticipants";
 import PublicCompetitions from "./pages/PublicCompetitions";
 import CheckStatus from "./pages/CheckStatus";
 import NotFound from "./pages/NotFound";
+import { lazy, Suspense } from 'react';
 
 const App = () => (
   <AuthProvider>
