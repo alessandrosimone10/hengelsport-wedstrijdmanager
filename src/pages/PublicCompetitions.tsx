@@ -2,9 +2,25 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Users } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, MapPin, Euro, Users, Cloud, CloudRain, Sun } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+// Hulpfunctie voor status badge
+const statusConfig = {
+  upcoming: { label: 'Gepland', variant: 'secondary' as const },
+  active: { label: 'Actief', variant: 'default' as const },
+  completed: { label: 'Afgelopen', variant: 'outline' as const },
+};
+
+// Simpel weericoon op basis van coördinaten (hier vereenvoudigd – je kunt later een echte weerkoppeling toevoegen)
+const WeatherIcon = ({ lat, lon }: { lat?: number; lon?: number }) => {
+  if (!lat || !lon) return null;
+  // Heel simpel: als het regent in België is het vaak bewolkt... voor demo gebruiken we een vast icoon.
+  // In een echte implementatie zou je het weer kunnen ophalen via OpenWeatherMap.
+  return <Cloud className="h-5 w-5 text-muted-foreground" />;
+};
 
 export default function PublicCompetitions() {
   const { data: competitions, isLoading, error } = useQuery({
@@ -25,41 +41,72 @@ export default function PublicCompetitions() {
       {competitions.length === 0 ? (
         <p>Er zijn momenteel geen wedstrijden.</p>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-6">
           {competitions.map((comp) => {
+            const status = statusConfig[comp.status] || { label: comp.status, variant: 'secondary' };
             const dateStr = new Date(comp.date).toLocaleDateString('nl-NL', {
-              day: 'numeric', month: 'long', year: 'numeric'
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
             });
             const available = comp.max_participants ? comp.max_participants - comp.current_participants : null;
+            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(comp.location)}`;
+
             return (
-              <Card key={comp.id}>
-                <CardHeader>
-                  <CardTitle>{comp.name}</CardTitle>
+              <Card key={comp.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-xl font-bold">{comp.name}</CardTitle>
+                      <Badge variant={status.variant} className="mt-1">{status.label}</Badge>
+                    </div>
+                    <WeatherIcon lat={comp.latitude} lon={comp.longitude} />
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Calendar className="h-4 w-4 shrink-0" />
+                    <span>{dateStr}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <MapPin className="h-4 w-4 shrink-0" />
+                    <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                      {comp.location}
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Users className="h-4 w-4 shrink-0" />
+                    <span>
+                      {comp.current_participants} deelnemer{comp.current_participants !== 1 ? 's' : ''}
+                      {comp.max_participants && ` (max ${comp.max_participants})`}
+                    </span>
+                  </div>
+                  {comp.entry_fee > 0 && (
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span>{dateStr}</span>
+                      <Euro className="h-4 w-4 shrink-0" />
+                      <span>€ {comp.entry_fee.toFixed(2)} p.p.</span>
                     </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <MapPin className="h-4 w-4" />
-                      <span>{comp.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Users className="h-4 w-4" />
-                      <span>{comp.current_participants} deelnemers</span>
-                      {comp.max_participants && (
-                        <span className="text-sm">(max {comp.max_participants})</span>
+                  )}
+
+                  {available !== null && (
+                    <div className="mt-2">
+                      {available <= 0 ? (
+                        <p className="text-sm text-red-500 font-medium">Volzet</p>
+                      ) : (
+                        <p className="text-sm text-green-600 font-medium">
+                          Nog {available} plaats{available !== 1 ? 'en' : ''} vrij
+                        </p>
                       )}
                     </div>
-                    {available !== null && available <= 0 ? (
-                      <p className="text-sm text-red-500">Volzet</p>
-                    ) : (
-                      <Button asChild className="mt-2">
-                        <Link to={`/meedoen/${comp.id}`}>Inschrijven</Link>
-                      </Button>
-                    )}
+                  )}
+
+                  <div className="pt-2">
+                    <Button asChild className="w-full">
+                      <Link to={`/meedoen/${comp.id}`}>
+                        Inschrijven
+                      </Link>
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
