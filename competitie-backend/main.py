@@ -16,7 +16,7 @@ import models
 import schemas
 import auth
 from database import SessionLocal, engine
-from email import send_approval_email, send_rejection_email  # één keer importeren
+from email_utils import send_approval_email, send_rejection_email
 
 # Fix async issues on some hosting platforms
 asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
