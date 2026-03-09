@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Euro, Users, Cloud, Fish } from 'lucide-react';
-import { Clock } from 'lucide-react';
+import { Calendar, MapPin, Euro, Users, Cloud, Fish, Clock } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -67,17 +66,6 @@ export default function PublicCompetitions() {
                 month: 'long',
                 year: 'numeric',
               });
-            <div className="flex items-center gap-2 text-muted-foreground">
-            <Calendar className="h-4 w-4 shrink-0" />
-            <span>{dateStr}</span>
-            </div>
-            {comp.start_time && (
-            <div className="flex items-center gap-2 text-muted-foreground">
-           <Clock className="h-4 w-4 shrink-0" />
-            <span>{comp.start_time} - {comp.end_time || '?'} uur</span>
-            </div>
-             });
-  
               const available = comp.max_participants ? comp.max_participants - comp.current_participants : null;
               const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(comp.location)}`;
 
@@ -97,6 +85,12 @@ export default function PublicCompetitions() {
                       <Calendar className="h-4 w-4 shrink-0" />
                       <span>{dateStr}</span>
                     </div>
+                    {comp.start_time && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Clock className="h-4 w-4 shrink-0" />
+                        <span>{comp.start_time} - {comp.end_time || '?'} uur</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <MapPin className="h-4 w-4 shrink-0" />
                       <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
