@@ -16,6 +16,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import PublicRegister from "./pages/PublicRegister";
 import PendingParticipants from "./pages/PendingParticipants";
+import PublicCompetitions from "./pages/PublicCompetitions";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/meedoen/:id" element={<PublicRegister />} />
+          <Route path="/aanbod" element={<PublicCompetitions />} />
           <Route path="/test" element={<div>✅ Test werkt</div>} />
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
