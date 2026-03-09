@@ -292,7 +292,12 @@ def get_public_competitions(db: Session = Depends(get_db)):
             "location": c.location,
             "status": c.status,
             "max_participants": c.max_participants,
-            "current_participants": len(c.participants)
+            "current_participants": len(c.participants),
+            "entry_fee": c.entry_fee,
+            "latitude": c.latitude,
+            "longitude": c.longitude,
+            "start_time": c.start_time.isoformat() if c.start_time else None,
+            "end_time": c.end_time.isoformat() if c.end_time else None,
         }
         for c in competitions
     ]
