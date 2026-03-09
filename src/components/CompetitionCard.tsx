@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Users, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, Users, ChevronRight, Clock } from 'lucide-react';
 import { Competition } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 
@@ -49,9 +49,15 @@ export default function CompetitionCard({ competition, index = 0 }: CompetitionC
               <MapPin className="h-3.5 w-3.5" />
               {competition.location}
             </span>
+            {competition.start_time && (
+              <span className="flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5" />
+                {competition.start_time} - {competition.end_time || '?'}
+              </span>
+            )}
             <span className="flex items-center gap-1.5">
               <Users className="h-3.5 w-3.5" />
-              {competition.participants.length} deelnemers
+              {competition.participants.length} deelnemer{competition.participants.length !== 1 && 's'}
             </span>
           </div>
         </div>
