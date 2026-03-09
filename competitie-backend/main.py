@@ -279,7 +279,59 @@ def public_register(
     db.commit()
     db.refresh(pending)
     return {"message": "Aanmelding ontvangen, wacht op goedkeuring", "id": pending.id}
-    
+
+# ---------- ADMIN: OPENSTAANDE AANMELDINGEN ----------
+@app.get("/admin/pending-participants", response_model=List[schemas.PendingParticipant])
+def get_pending_participants(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    # Alleen ingelogde gebruikers (jij) mogen dit zien. Optioneel: check op is_admin
+    return db.query(models.PendingParticipant).filter(models.PendingParticipant.status == "pending").all()
+
+@app.post("/admin/pending-participants/{pending_id}/approve")
+def approve_pending(
+    pending_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    pending = db.query(models.PendingParticipant).filter(models.PendingParticipant.id == pending_id).first()
+    if not pending:
+        raise HTTPException(404, "Aanmelding niet gevonden")
+    if pending.status != "pending":
+        raise HTTPException(400, "Aanmelding is al behandeld")
+
+    # Controleer of de wedstrijd nog plaats heeft
+    comp = db.query(models.Competition).filter(models.Competition.id == pending.competition_id).first()
+    if comp.max_participants and len(comp.participants) >= comp.max_participants:
+        raise HTTPException(400, "Maximum aantal deelnemers bereikt")
+
+    # Maak echte deelnemer aan
+    new_participant = models.Participant(
+        name=pending.name,
+        competition_id=pending.competition_id,
+        owner_id=current_user.id  # of comp.owner_id? Jij bent de eigenaar.
+    )
+    db.add(new_participant)
+    pending.status = "approved"
+    db.commit()
+    return {"message": "Goedgekeurd"}
+
+@app.post("/admin/pending-participants/{pending_id}/reject")
+def reject_pending(
+    pending_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    pending = db.query(models.PendingParticipant).filter(models.PendingParticipant.id == pending_id).first()
+    if not pending:
+        raise HTTPException(404, "Aanmelding niet gevonden")
+    if pending.status != "pending":
+        raise HTTPException(400, "Aanmelding is al behandeld")
+    pending.status = "rejected"
+    db.commit()
+    return {"message": "Afgewezen"}
+
 # ---------- VANGSTEN ----------
 @app.post("/participants/{part_id}/catches", response_model=schemas.Catch)
 def add_catch(
