@@ -16,6 +16,7 @@ import models
 import schemas
 import auth
 from database import SessionLocal, engine
+from email import send_approval_email, send_rejection_email
 
 # Fix async issues on some hosting platforms
 asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
@@ -310,7 +311,11 @@ def approve_pending(
     pending_id: int,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
+     # Verstuur e‑mail
+    send_approval_email(pending.email, comp.name)
+    return {"message": "Goedgekeurd"}
 ):
+
     pending = db.query(models.PendingParticipant).filter(models.PendingParticipant.id == pending_id).first()
     if not pending:
         raise HTTPException(404, "Aanmelding niet gevonden")
@@ -338,6 +343,8 @@ def reject_pending(
     pending_id: int,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
+        send_rejection_email(pending.email, comp.name)
+    return {"message": "Afgewezen"}
 ):
     pending = db.query(models.PendingParticipant).filter(models.PendingParticipant.id == pending_id).first()
     if not pending:
