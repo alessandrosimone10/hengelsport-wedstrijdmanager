@@ -15,7 +15,7 @@ import FishFund from "./pages/FishFund";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import PublicRegister from "./pages/PublicRegister";
-import PendingParticipants from "./pages/PendingParticipants";
+const PendingParticipants = lazy(() => import('./pages/PendingParticipants'));
 import PublicCompetitions from "./pages/PublicCompetitions";
 import CheckStatus from "./pages/CheckStatus";
 import NotFound from "./pages/NotFound";
