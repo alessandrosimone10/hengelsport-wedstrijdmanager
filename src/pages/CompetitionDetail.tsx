@@ -132,15 +132,19 @@ export default function CompetitionDetail() {
     onError: (err: Error) => toast.error(`Status wijzigen mislukt: ${err.message}`),
   });
 
-  const addParticipantMutation = useMutation({
-    mutationFn: ({ competitionId, name, number }: { competitionId: number; name: string; number?: number }) =>
-      addParticipant(competitionId, name, number),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['competition', competitionId] });
-      toast.success('Deelnemer toegevoegd');
-    },
-    onError: (err: Error) => toast.error(`Toevoegen mislukt: ${err.message}`),
-  });
+const addParticipantMutation = useMutation({
+  mutationFn: ({ competitionId, name, number }: { competitionId: number; name: string; number?: number }) =>
+    addParticipant(competitionId, name, number),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['competition', competitionId] });
+    toast.success('Deelnemer toegevoegd');
+  },
+  onError: (err: Error) => {
+    // Toon de fout in een alert voor debugging
+    alert('Fout bij toevoegen: ' + err.message);
+    toast.error(`Toevoegen mislukt: ${err.message}`);
+  },
+});
 
   const addCatchMutation = useMutation({
     mutationFn: ({
