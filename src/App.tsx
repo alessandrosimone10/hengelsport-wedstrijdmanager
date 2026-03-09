@@ -17,6 +17,7 @@ import Register from "./pages/Register";
 import PublicRegister from "./pages/PublicRegister";
 import PendingParticipants from "./pages/PendingParticipants";
 import PublicCompetitions from "./pages/PublicCompetitions";
+import CheckStatus from "./pages/CheckStatus";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
