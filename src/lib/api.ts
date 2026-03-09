@@ -112,7 +112,16 @@ export async function addParticipant(competitionId: number, name: string, number
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify({ name, number }),
   });
-  if (!res.ok) throw new Error('Deelnemer toevoegen mislukt');
+  if (!res.ok) {
+    let errorDetail = '';
+    try {
+      const errorJson = await res.json();
+      errorDetail = JSON.stringify(errorJson.detail || errorJson);
+    } catch {
+      errorDetail = await res.text();
+    }
+    throw new Error(`Toevoegen mislukt (${res.status}): ${errorDetail}`);
+  }
   return res.json();
 }
 
