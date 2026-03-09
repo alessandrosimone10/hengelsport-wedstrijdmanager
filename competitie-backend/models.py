@@ -29,6 +29,8 @@ class Competition(Base):
     fish_fund_percentage = Column(Float, nullable=True)
     custom_prize_pot = Column(Float, nullable=True)
     max_participants = Column(Integer, nullable=True)
+    start_time = Column(Time, nullable=True)   # nieuw
+    end_time = Column(Time, nullable=True)     # nieuw
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
 
