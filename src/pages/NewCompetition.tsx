@@ -138,6 +138,24 @@ export default function NewCompetition() {
     Laat leeg voor onbeperkt.
   </p>
 </div>
+            <div className="space-y-2">
+  <Label htmlFor="startTime">Starttijd (optioneel, bijv. 14:00)</Label>
+  <Input
+    id="startTime"
+    type="time"
+    value={form.startTime}
+    onChange={e => setForm(f => ({ ...f, startTime: e.target.value }))}
+  />
+</div>
+<div className="space-y-2">
+  <Label htmlFor="endTime">Eindtijd (optioneel)</Label>
+  <Input
+    id="endTime"
+    type="time"
+    value={form.endTime}
+    onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))}
+  />
+</div>
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? 'Bezig...' : 'Wedstrijd aanmaken'}
             </Button>
