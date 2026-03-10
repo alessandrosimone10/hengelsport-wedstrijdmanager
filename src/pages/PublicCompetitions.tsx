@@ -94,7 +94,7 @@ export default function PublicCompetitions() {
                         <CardTitle className="text-xl font-bold">{comp.name}</CardTitle>
                         <Badge variant={status.variant} className="mt-1">{status.label}</Badge>
                       </div>
-                      <WeatherIcon lat={comp.latitude} lon={comp.longitude} />
+                     <WeatherIcon compId={comp.id} />
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
