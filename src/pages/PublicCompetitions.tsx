@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Euro, Users, Cloud, Fish, Clock } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://hengelsport-wedstrijdmanager.onrender.com";
 
 const statusConfig = {
   upcoming: { label: 'Gepland', variant: 'secondary' as const },
