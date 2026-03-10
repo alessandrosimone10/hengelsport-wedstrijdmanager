@@ -18,7 +18,6 @@ import auth
 from database import SessionLocal, engine
 from email_utils import send_approval_email, send_rejection_email
 
-# Fix async issues on some hosting platforms
 asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
 
 models.Base.metadata.create_all(bind=engine)
@@ -28,19 +27,11 @@ app = FastAPI(title="Competitie API")
 # ---------- CORS ----------
 app.add_middleware(
     CORSMiddleware,
-
-    allow_origins=["*"],
-    allow_credentials=True,
-
     allow_origins=[
         "https://hengelsport-wedstrijdmanager.vercel.app",
         "https://hengelsport-wedstrijdma-git-9aa740-alessandrosimone10s-projects.vercel.app"
     ],
     allow_credentials=False,
-
-
-    allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -413,6 +404,22 @@ def add_catch(
     db.refresh(db_catch)
     return db_catch
 
+@app.delete("/catches/{catch_id}")
+def delete_catch(
+    catch_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    db_catch = db.query(models.Catch).filter(
+        models.Catch.id == catch_id,
+        models.Catch.owner_id == current_user.id
+    ).first()
+    if not db_catch:
+        raise HTTPException(404, "Vangst niet gevonden")
+    db.delete(db_catch)
+    db.commit()
+    return {"ok": True}
+
 # ---------- NUMMERS LOTTEN ----------
 @app.post("/competitions/{comp_id}/assign-numbers")
 def assign_numbers(
@@ -517,41 +524,6 @@ def get_dashboard(
         "total_weight": total_weight
     }
 
-@app.delete("/catches/{catch_id}")
-def delete_catch(catch_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    db_catch = db.query(models.Catch).filter(models.Catch.id == catch_id, models.Catch.owner_id == current_user.id).first()
-    if not db_catch:
-        raise HTTPException(404, "Vangst niet gevonden")
-    db.delete(db_catch)
-    db.commit()
-    return {"ok": True}
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-# ---------- DASHBOARD ----------
-@app.get("/competitions/{comp_id}/dashboard")
-def get_dashboard(
-        comp_id: int,
-        db: Session = Depends(get_db),
-        current_user: models.User = Depends(get_current_user)
-):
-    comp = db.query(models.Competition).filter(
-        models.Competition.id == comp_id,
-        models.Competition.owner_id == current_user.id
-    ).first()
-    if not comp:
-        raise HTTPException(404, "Competitie niet gevonden")
-    total_fish = 0
-    total_weight = 0
-    for p in comp.participants:
-        for c in p.catches:
-            total_fish += 1
-            total_weight += c.weight
-    return {
-        "competition": comp.name,
-        "participants": len(comp.participants),
-        "total_fish": total_fish,
-        "total_weight": total_weight
-    }
