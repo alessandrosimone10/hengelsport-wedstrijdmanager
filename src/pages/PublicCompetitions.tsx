@@ -116,14 +116,22 @@ export default function PublicCompetitions() {
                       <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
                         {comp.location}
                       </a>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Users className="h-4 w-4 shrink-0" />
-                      <span>
-                        {comp.current_participants} deelnemer{comp.current_participants !== 1 ? 's' : ''}
-                        {comp.max_participants && ` (max ${comp.max_participants})`}
-                      </span>
-                    </div>
+               </div>
+               <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Users className="h-4 w-4 shrink-0" />
+                <span>
+                  {comp.current_participants} deelnemer
+                  {comp.current_participants !== 1 ? 's' : ''}
+                </span>
+              </div>
+
+              {comp.max_participants && (
+              <Badge variant="outline">
+              {comp.current_participants}/{comp.max_participants}
+              </Badge>
+              )}
+            </div>
                     {comp.entry_fee > 0 && (
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Euro className="h-4 w-4 shrink-0" />
@@ -134,7 +142,7 @@ export default function PublicCompetitions() {
                     {available !== null && (
                       <div className="mt-2">
                         {available <= 0 ? (
-                          <p className="text-sm text-red-500 font-medium">Volzet</p>
+                         <Badge variant="destructive">Volzet</Badge>
                         ) : (
                           <p className="text-sm text-green-600 font-medium">
                             Nog {available} plaats{available !== 1 ? 'en' : ''} vrij
