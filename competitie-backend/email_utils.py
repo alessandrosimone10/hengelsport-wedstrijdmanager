@@ -1,43 +1,60 @@
+import smtplib
+from email.mime.text import MIMEText
 import os
-import resend
 
-resend.api_key = os.getenv("RESEND_API_KEY")
-FROM_EMAIL = os.getenv("EMAIL_FROM", "noreply@hengelsport.app")
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
+SMTP_USER = os.getenv("SMTP_USER")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 
-def send_approval_email(to_email: str, competition_name: str):
-    subject = "✅ Goedkeuring inschrijving"
-    html = f"""
-    <h2>Goedkeuring inschrijving</h2>
-    <p>Beste visser,</p>
-    <p>Je inschrijving voor de wedstrijd <strong>{competition_name}</strong> is goedgekeurd!</p>
-    <p>Je kunt de wedstrijddetails bekijken via de app. Veel plezier!</p>
-    <p>Met vriendelijke groet,<br>Hengelsport Wedstrijdmanager</p>
-    """
+
+def send_email(to_email, subject, message):
+
+    if not SMTP_USER or not SMTP_PASSWORD:
+        print("Email niet ingesteld")
+        return
+
+    msg = MIMEText(message)
+    msg["Subject"] = subject
+    msg["From"] = SMTP_USER
+    msg["To"] = to_email
+
     try:
-        resend.Emails.send({
-            "from": FROM_EMAIL,
-            "to": to_email,
-            "subject": subject,
-            "html": html
-        })
-    except Exception as e:
-        print(f"Fout bij verzenden e-mail: {e}")
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASSWORD)
+        server.sendmail(SMTP_USER, to_email, msg.as_string())
+        server.quit()
 
-def send_rejection_email(to_email: str, competition_name: str):
-    subject = "❌ Afwijzing inschrijving"
-    html = f"""
-    <h2>Afwijzing inschrijving</h2>
-    <p>Beste visser,</p>
-    <p>Helaas, je inschrijving voor de wedstrijd <strong>{competition_name}</strong> is afgewezen.</p>
-    <p>Dit kan zijn omdat het maximum aantal deelnemers is bereikt of om andere redenen.</p>
-    <p>Met vriendelijke groet,<br>Hengelsport Wedstrijdmanager</p>
-    """
-    try:
-        resend.Emails.send({
-            "from": FROM_EMAIL,
-            "to": to_email,
-            "subject": subject,
-            "html": html
-        })
     except Exception as e:
-        print(f"Fout bij verzenden e-mail: {e}")
+        print("Email fout:", e)
+
+
+def send_approval_email(email, competition_name):
+
+    subject = "Je inschrijving is goedgekeurd"
+
+    message = f"""
+Je bent goedgekeurd voor de wedstrijd:
+
+{competition_name}
+
+Tot dan!
+"""
+
+    send_email(email, subject, message)
+
+
+def send_rejection_email(email, competition_name):
+
+    subject = "Je inschrijving is afgewezen"
+
+    message = f"""
+Je inschrijving voor:
+
+{competition_name}
+
+is helaas afgewezen.
+"""
+
+    send_email(email, subject, message)
