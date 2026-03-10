@@ -38,6 +38,9 @@ app.add_middleware(
     ],
     allow_credentials=False,
 
+
+    allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -488,7 +491,6 @@ def get_ranking(
     ranking.sort(key=lambda x: x["total_weight"], reverse=True)
     return ranking
 
-
 # ---------- DASHBOARD ----------
 @app.get("/competitions/{comp_id}/dashboard")
 def get_dashboard(
@@ -528,3 +530,28 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
+# ---------- DASHBOARD ----------
+@app.get("/competitions/{comp_id}/dashboard")
+def get_dashboard(
+        comp_id: int,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    comp = db.query(models.Competition).filter(
+        models.Competition.id == comp_id,
+        models.Competition.owner_id == current_user.id
+    ).first()
+    if not comp:
+        raise HTTPException(404, "Competitie niet gevonden")
+    total_fish = 0
+    total_weight = 0
+    for p in comp.participants:
+        for c in p.catches:
+            total_fish += 1
+            total_weight += c.weight
+    return {
+        "competition": comp.name,
+        "participants": len(comp.participants),
+        "total_fish": total_fish,
+        "total_weight": total_weight
+    }
