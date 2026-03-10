@@ -129,9 +129,16 @@ def get_competitions(
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
-    return db.query(models.Competition).filter(
+    competitions = db.query(models.Competition).filter(
         models.Competition.owner_id == current_user.id
     ).all()
+    # Zet start_time en end_time om naar string voor validatie
+    for comp in competitions:
+        if comp.start_time:
+            comp.start_time = str(comp.start_time)
+        if comp.end_time:
+            comp.end_time = str(comp.end_time)
+    return competitions
 
 @app.get("/competitions/{comp_id}", response_model=schemas.Competition)
 def get_competition(
@@ -145,6 +152,11 @@ def get_competition(
     ).first()
     if not comp:
         raise HTTPException(404, "Competitie niet gevonden")
+    # Zet start_time en end_time om naar string
+    if comp.start_time:
+        comp.start_time = str(comp.start_time)
+    if comp.end_time:
+        comp.end_time = str(comp.end_time)
     return comp
 
 @app.patch("/competitions/{comp_id}", response_model=schemas.Competition)
