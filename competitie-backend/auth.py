@@ -11,7 +11,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def truncate_password(password: str) -> str:
-    """Zorg dat wachtwoord niet langer is dan 72 bytes (bcrypt-limiet)."""
     encoded = password.encode('utf-8')
     if len(encoded) <= 72:
         return password
