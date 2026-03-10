@@ -45,7 +45,9 @@ class CompetitionBase(BaseModel):
     fish_fund_percentage: Optional[float] = None
     custom_prize_pot: Optional[float] = None
     max_participants: Optional[int] = None
-
+    start_time: Optional[time]
+    end_time: Optional[time]
+    
     class Config:
         orm_mode = True
 
