@@ -103,14 +103,14 @@ export default function PublicCompetitions() {
                       <span>{dateStr}</span>
                     </div>
                    {comp.start_time && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock className="h-4 w-4 shrink-0" />
-                    <span>
-                    {comp.start_time.slice(0,5)}
-                    {comp.end_time && ` - ${comp.end_time.slice(0,5)}`} uur
-                    </span>
-                    </div>
-                    )}
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                  <Clock className="h-4 w-4 shrink-0" />
+                  <span className="font-medium">
+                  {comp.start_time.slice(0,5)}
+                  {comp.end_time && ` - ${comp.end_time.slice(0,5)}`}
+                  </span>
+                  </div>
+                  )}
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <MapPin className="h-4 w-4 shrink-0" />
                       <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
