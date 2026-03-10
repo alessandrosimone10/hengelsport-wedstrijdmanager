@@ -14,9 +14,25 @@ const statusConfig = {
   completed: { label: 'Afgelopen', variant: 'outline' as const },
 };
 
-const WeatherIcon = ({ lat, lon }: { lat?: number; lon?: number }) => {
-  if (!lat || !lon) return null;
-  return <Cloud className="h-5 w-5 text-muted-foreground" />;
+function WeatherIcon({ compId }: { compId: number }) {
+  const { data } = useQuery({
+    queryKey: ['weather', compId],
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE_URL}/competitions/${compId}/weather`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    staleTime: 600000,
+  });
+
+  if (!data) return null;
+
+  return (
+    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+      <Cloud className="h-4 w-4" />
+      {data.temperature}°C
+    </div>
+  );
 };
 
 export default function PublicCompetitions() {
