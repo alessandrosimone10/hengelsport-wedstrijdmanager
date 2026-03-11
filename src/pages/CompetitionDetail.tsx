@@ -646,10 +646,10 @@ export default function CompetitionDetail() {
             )}
             {participants.length > 0 && competition.available_numbers && competition.available_numbers.length >= participants.length && (
               <Button size="sm" variant="outline > 0 && competition.available_numbers && competition.available_numbers.length >= participants.length && (
-              <Button size="sm" variant="outline" onClick={handleRandomAssign}>
-                <Shuffle className="mr-2 h-4 w-4" />
-                Loot nummers
-              </Button>
+             <Button size="sm" variant="outline" onClick={handleRandomAssign}>
+            <Shuffle className="mr-2 h-4 w-4" />
+            Loot nummers
+            </Button>
             )}
             {/* Beschikbare nummers instellen */}
             {participants.length > 0 && (
