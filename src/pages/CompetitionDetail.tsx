@@ -41,6 +41,30 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { Sun, Cloud, CloudRain } from "lucide-react";
+
+const getWeatherIcon = (code?: string) => {
+  if (!code) {
+    return <Cloud className="h-10 w-10 text-gray-400" />;
+  }
+
+  const c = code.toLowerCase();
+
+  if (c.includes("sun") || c.includes("clear")) {
+    return <Sun className="h-10 w-10 text-yellow-500" />;
+  }
+
+  if (c.includes("cloud")) {
+    return <Cloud className="h-10 w-10 text-gray-500" />;
+  }
+
+  if (c.includes("rain") || c.includes("drizzle")) {
+    return <CloudRain className="h-10 w-10 text-blue-500" />;
+  }
+
+  return <Cloud className="h-10 w-10 text-gray-400" />;
+};
+
 
 // Hulpfunctie voor standaard prijspercentages
 function getDefaultPercentages(count: number): number[] {
@@ -227,9 +251,11 @@ const addParticipantMutation = useMutation({
   });
 
   // Ranking
-  const ranked = [...competition.participants]
-    .map(p => ({ ...p, total: getTotalWeight(p) }))
-    .sort((a, b) => b.total - a.total);
+ const ranked = competition?.participants
+  ? [...competition.participants]
+      .map(p => ({ ...p, total: getTotalWeight(p) }))
+      .sort((a, b) => b.total - a.total)
+  : [];
 
   // Prijzenpot berekening
   const entryFee = competition.entry_fee ?? 0;
@@ -481,9 +507,7 @@ const addParticipantMutation = useMutation({
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {weather.condition_code === 'sun' && <Sun className="h-10 w-10 text-yellow-500" />}
-                {weather.condition_code === 'cloud' && <Cloud className="h-10 w-10 text-gray-500" />}
-                {weather.condition_code === 'rain' && <CloudRain className="h-10 w-10 text-blue-500" />}
+                {getWeatherIcon(weather?.condition_code)}
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Huidig weer</p>
                   <p className="text-2xl font-bold">{weather.temperature}°C</p>
