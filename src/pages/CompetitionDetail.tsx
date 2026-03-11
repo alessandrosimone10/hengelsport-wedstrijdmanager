@@ -86,7 +86,7 @@ export default function CompetitionDetail() {
   useEffect(() => {
     if (competition) {
       fetchWeather();
-    }
+    } console.log('Weerdata opgeslagen:', data);
   }, [competition]);
 
   const fetchWeather = async () => {
