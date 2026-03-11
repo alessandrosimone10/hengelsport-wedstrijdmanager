@@ -1,80 +1,98 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchCompetitions, deleteCompetition } from '@/lib/api';
+import { useQuery } from '@tanstack/react-query';
+import { fetchCompetitions } from '@/lib/api';
+import CompetitionCard from '@/components/CompetitionCard';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Trash2, ArrowRight } from 'lucide-react';
-import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
+import { Plus, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
 
-const statusConfig = {
-  upcoming: { label: 'Gepland', variant: 'secondary' as const },
-  active: { label: 'Actief', variant: 'default' as const },
-  completed: { label: 'Afgelopen', variant: 'outline' as const },
-};
-
 export default function Competitions() {
-  const queryClient = useQueryClient();
-  const [filter, setFilter] = useState<'all' | 'upcoming' | 'active' | 'completed'>('all');
-
-  const { data: competitions, isLoading, error } = useQuery({
+  const { data: competitions = [], isLoading, error } = useQuery({
     queryKey: ['competitions'],
     queryFn: fetchCompetitions,
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteCompetition,
-    onSuccess: () => {
-      toast.success('Wedstrijd verwijderd');
-      queryClient.invalidateQueries({ queryKey: ['competitions'] });
-    },
-    onError: (err: Error) => toast.error(`Verwijderen mislukt: ${err.message}`),
-  });
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'upcoming' | 'active' | 'completed'>('all');
 
-  const filtered = competitions?.filter(c => filter === 'all' || c.status === filter) ?? [];
+  if (isLoading) {
+    return <div className="p-8 text-center">Laden...</div>;
+  }
 
-  if (isLoading) return <p>Laden...</p>;
-  if (error) return <p>Fout bij ophalen: {(error as Error).message}</p>;
+  if (error) {
+    return <div className="p-8 text-center text-red-500">Fout: {(error as Error).message}</div>;
+  }
+
+  const filtered = competitions
+    .filter(c => filter === 'all' || c.status === filter)
+    .filter(c =>
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.location.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const filters = [
+    { key: 'all' as const, label: 'Alles' },
+    { key: 'active' as const, label: 'Actief' },
+    { key: 'upcoming' as const, label: 'Gepland' },
+    { key: 'completed' as const, label: 'Afgelopen' },
+  ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        <Button size="sm" variant={filter === 'all' ? 'default' : 'outline'} onClick={() => setFilter('all')}>Alles</Button>
-        <Button size="sm" variant={filter === 'upcoming' ? 'default' : 'outline'} onClick={() => setFilter('upcoming')}>Gepland</Button>
-        <Button size="sm" variant={filter === 'active' ? 'default' : 'outline'} onClick={() => setFilter('active')}>Actief</Button>
-        <Button size="sm" variant={filter === 'completed' ? 'default' : 'outline'} onClick={() => setFilter('completed')}>Afgelopen</Button>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-3xl font-bold tracking-tight font-display">Wedstrijden</h1>
+        <Button asChild>
+          <Link to="/competitions/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Nieuwe wedstrijd
+          </Link>
+        </Button>
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        {filtered.length === 0 && <p>Geen wedstrijden gevonden.</p>}
-        {filtered.map(c => (
-          <Card key={c.id}>
-            <CardHeader className="flex justify-between items-center">
-              <CardTitle>{c.name}</CardTitle>
-              <Badge variant={statusConfig[c.status].variant}>{statusConfig[c.status].label}</Badge>
-            </CardHeader>
-            <CardContent className="flex justify-between items-center">
-              <p>{new Date(c.date).toLocaleDateString('nl-NL')}</p>
-              <div className="flex gap-2">
-                <Button
-                  size="icon"
-                  variant="destructive"
-                  onClick={() => deleteMutation.mutate(c.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-                <Button size="icon" asChild>
-                  <Link to={`/competitions/${c.id}`}>
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </motion.div>
+      {/* Filters */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Zoek wedstrijd..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <div className="flex gap-1">
+          {filters.map(f => (
+            <Button
+              key={f.key}
+              variant={filter === f.key ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setFilter(f.key)}
+            >
+              {f.label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* List */}
+      <div className="space-y-3">
+        {filtered.length === 0 ? (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="py-12 text-center text-muted-foreground"
+          >
+            Geen wedstrijden gevonden.
+          </motion.p>
+        ) : (
+          filtered.map((comp, i) => (
+            <CompetitionCard key={comp.id} competition={comp} index={i} />
+          ))
+        )}
+      </div>
     </div>
   );
 }
