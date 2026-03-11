@@ -17,27 +17,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
   ArrowLeft,
-  Calendar,
-  Coins,
-  Download,
-  Fish,
-  Hash,
-  MapPin,
-  Plus,
-  Shuffle,
   Trash2,
-  Trophy,
-  UserPlus,
+  Sun,
   Cloud,
   CloudRain,
-  Sun,
-  Wind,
-  Droplets,
+  Coins,
+  UserPlus,
+  Shuffle,
+  Fish,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -49,7 +41,7 @@ const statusConfig = {
   completed: { label: 'Afgelopen', variant: 'outline' as const },
 };
 
-// Hulpfunctie voor prijsverdeling
+// Prijsberekening helper
 function getDefaultPercentages(count: number): number[] {
   if (count === 1) return [100];
   if (count === 2) return [60, 40];
@@ -59,7 +51,7 @@ function getDefaultPercentages(count: number): number[] {
   return Array.from({ length: count }, (_, i) => base + (i < rest ? 1 : 0));
 }
 
-// Weer icoon helper
+// Weather icon helper
 const getWeatherIcon = (code?: string) => {
   if (!code) return <Cloud className="h-10 w-10 text-gray-400" />;
   const c = code.toLowerCase();
@@ -94,9 +86,9 @@ export default function CompetitionDetail() {
     setLoadingWeather(true);
     setWeatherError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/competitions/${competitionId}/weather`, { headers: authHeaders() });
-      if (!response.ok) throw new Error('Kon weer niet ophalen');
-      const data = await response.json();
+      const res = await fetch(`${API_BASE_URL}/competitions/${competitionId}/weather`, { headers: authHeaders() });
+      if (!res.ok) throw new Error('Kon weer niet ophalen');
+      const data = await res.json();
       setWeather(data);
     } catch (err) {
       setWeatherError(err instanceof Error ? err.message : 'Onbekende fout');
@@ -134,6 +126,21 @@ export default function CompetitionDetail() {
     onError: (err: Error) => toast.error(`Toevoegen mislukt: ${err.message}`),
   });
 
+  const addCatchMutation = useMutation({
+    mutationFn: ({ participantId, species, weight }: { participantId: number; species: string; weight: number }) => addCatch(participantId, { species, weight }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['competition', competitionId] }),
+    onError: (err: Error) => toast.error(`Vangst toevoegen mislukt: ${err.message}`),
+  });
+
+  const assignNumbersMutation = useMutation({
+    mutationFn: () => assignNumbersRandomly(competitionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['competition', competitionId] });
+      toast.success('Nummers willekeurig toegewezen');
+    },
+    onError: (err: Error) => toast.error(`Nummers toewijzen mislukt: ${err.message}`),
+  });
+
   if (isNaN(competitionId)) return <p>Ongeldige wedstrijd ID</p>;
   if (isLoading) return <p>Laden...</p>;
   if (error) return <p>Fout: {(error as Error).message}</p>;
@@ -141,10 +148,9 @@ export default function CompetitionDetail() {
 
   const status = statusConfig[competition.status];
   const dateStr = new Date(competition.date).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const participants = competition.participants ?? [];
+  const ranked = [...participants].map(p => ({ ...p, total: getTotalWeight(p) })).sort((a, b) => b.total - a.total);
 
-  const ranked = competition.participants ? [...competition.participants].map(p => ({ ...p, total: getTotalWeight(p) })).sort((a, b) => b.total - a.total) : [];
-
-  // Handlers
   const handleDelete = () => deleteMutation.mutate(competitionId);
   const handleStatusChange = (newStatus: string) => statusMutation.mutate({ id: competitionId, status: newStatus });
   const handleAddParticipant = (e: React.FormEvent<HTMLFormElement>) => {
@@ -156,6 +162,14 @@ export default function CompetitionDetail() {
     addParticipantMutation.mutate({ competitionId, name: name.trim(), number: number ? Number(number) : undefined });
     e.currentTarget.reset();
   };
+
+  const handleAddCatch = (participantId: number, species: string, weight: number) => {
+    if (!species || !weight) return;
+    addCatchMutation.mutate({ participantId, species, weight });
+  };
+
+  const totalPot = competition.prizePot ?? 0;
+  const percentages = getDefaultPercentages(ranked.length);
 
   return (
     <div className="space-y-6">
@@ -171,16 +185,18 @@ export default function CompetitionDetail() {
           <h1 className="text-2xl font-bold">{competition.name}</h1>
           <Badge variant={status.variant}>{status.label}</Badge>
         </div>
-        <div className="flex gap-2">
+        <div>{dateStr}</div>
+        <div className="flex gap-2 mt-2">
           {competition.status === 'upcoming' && <Button onClick={() => handleStatusChange('active')}>Start wedstrijd</Button>}
           {competition.status === 'active' && <Button onClick={() => handleStatusChange('completed')}>Beëindig wedstrijd</Button>}
           <Button variant="destructive" onClick={handleDelete}>Verwijderen</Button>
+          <Button onClick={() => assignNumbersMutation.mutate()}>Willekeurige nummers</Button>
         </div>
       </motion.div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Deelnemers</CardTitle>
+          <CardTitle>Deelnemers & Vangsten</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAddParticipant} className="flex gap-2 mb-4">
@@ -196,6 +212,7 @@ export default function CompetitionDetail() {
                 <TableHead>Naam</TableHead>
                 <TableHead>Nr</TableHead>
                 <TableHead>Gewicht</TableHead>
+                <TableHead>Vangsten</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -205,12 +222,52 @@ export default function CompetitionDetail() {
                   <TableCell>{p.name}</TableCell>
                   <TableCell>{p.number ?? '—'}</TableCell>
                   <TableCell>{formatWeight(p.total)}</TableCell>
+                  <TableCell>
+                    {p.catches?.map((c: any, idx: number) => (
+                      <div key={idx}>{c.species} {formatWeight(c.weight)}</div>
+                    ))}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      {competition.prizePot && ranked.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Prijzenpot</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {ranked.map((p, i) => (
+              <div key={p.id} className="flex justify-between">
+                <span>{p.name} ({percentages[i]}%)</span>
+                <span>{Math.round((percentages[i] / 100) * totalPot)} €</span>
+              </div>
+            ))}
+            <div className="mt-2 font-bold">Totaal: {totalPot} €</div>
+          </CardContent>
+        </Card>
+      )}
+
+      {loadingWeather && <p>Laden weer...</p>}
+      {weatherError && <p className="text-red-500">{weatherError}</p>}
+      {weather && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Weer</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center gap-4">
+            {getWeatherIcon(weather.condition)}
+            <div>
+              <div>Temp: {weather.temperature} °C</div>
+              <div>Wind: {weather.windSpeed} km/h</div>
+              <div>Neerslag: {weather.precipitation} mm</div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
