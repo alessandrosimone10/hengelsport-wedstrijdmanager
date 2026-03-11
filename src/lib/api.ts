@@ -91,8 +91,11 @@ export async function deleteCompetition(id: number) {
     method: 'DELETE',
     headers: authHeaders(),
   });
-  if (!res.ok) throw new Error('Verwijderen mislukt');
-  return res.json();
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Verwijderen mislukt: ${text}`);
+  }
+  return true;
 }
 
 export async function updateCompetitionStatus(id: number, status: string) {
