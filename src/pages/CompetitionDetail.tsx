@@ -41,7 +41,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { Sun, Cloud, CloudRain } from "lucide-react";
 
 const getWeatherIcon = (code?: string) => {
   if (!code) {
@@ -129,7 +128,7 @@ export default function CompetitionDetail() {
     console.log('Weerdata ontvangen:', data); // ✅ juiste plaats
     setWeather(data);
   } catch (err) {
-    setWeatherError(err.message);
+   setWeatherError(err instanceof Error ? err.message : "Onbekende fout");
     console.error('Weer fout:', err);
   } finally {
     setLoadingWeather(false);
