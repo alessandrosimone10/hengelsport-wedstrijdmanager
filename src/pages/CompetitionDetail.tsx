@@ -58,8 +58,7 @@ const statusConfig = {
   completed: { label: 'Afgelopen', variant: 'outline' as const },
 };
 
-export const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "https://hengelsport-wedstrijdmanager.onrender.com";
+import { API_BASE_URL } from "@/lib/config";
 
 export default function CompetitionDetail() {
   const { id } = useParams<{ id: string }>();
