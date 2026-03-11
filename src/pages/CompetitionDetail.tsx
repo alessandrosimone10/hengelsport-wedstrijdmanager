@@ -84,11 +84,10 @@ export default function CompetitionDetail() {
 
   // ----- Weer ophalen zodra competitie geladen is -----
   useEffect(() => {
-    if (competition) {
-      fetchWeather();
-    } 
-  }, [competition]);
-
+  if (!competitionId) return;
+  fetchWeather();
+}, [competitionId]);
+  
   const fetchWeather = async () => {
   setLoadingWeather(true);
   setWeatherError(null);
