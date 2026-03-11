@@ -1,101 +1,27 @@
-// Gebruik environment variable voor flexibiliteit (ontwikkel/productie)
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001';
+// lib/api.ts
+import { API_BASE_URL } from './config';
 
-// Helper om token aan request toe te voegen
-export function authHeaders(): HeadersInit {  // <-- voeg export toe
-  const token = localStorage.getItem('token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+// Auth headers (pas aan als nodig)
+export const authHeaders = () => ({
+  Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+});
 
-// ========== Authenticatie ==========
-export async function login(email: string, password: string) {
-  const formData = new URLSearchParams();
-  formData.append('username', email);
-  formData.append('password', password);
-
-  const res = await fetch(`${API_BASE_URL}/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: formData,
-  });
-  if (!res.ok) throw new Error('Login mislukt');
-  return res.json();
-}
-
-export async function register(email: string, password: string) {
-  const res = await fetch(`${API_BASE_URL}/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-  if (!res.ok) throw new Error('Registratie mislukt');
-  return res.json();
-}
-
-export async function getCurrentUser() {
-  const res = await fetch(`${API_BASE_URL}/users/me`, {
-    headers: authHeaders(),
-  });
-  if (!res.ok) throw new Error('Ophalen gebruiker mislukt');
-  return res.json();
-}
+// --- Wedstrijd endpoints ---
 
 export async function fetchCompetitions() {
   const res = await fetch(`${API_BASE_URL}/competitions`, {
     headers: authHeaders(),
   });
-  if (!res.ok) throw new Error('Ophalen competities mislukt');
+  if (!res.ok) throw new Error('Kon wedstrijden niet ophalen');
   return res.json();
 }
-
 
 export async function fetchCompetition(id: number) {
   const res = await fetch(`${API_BASE_URL}/competitions/${id}`, {
     headers: authHeaders(),
   });
-  if (!res.ok) throw new Error('Competitie niet gevonden');
+  if (!res.ok) throw new Error('Kon wedstrijd niet ophalen');
   return res.json();
-}
-
-export async function createCompetition(data: {
-  name: string;
-  date: string;
-  location: string;
-  entry_fee?: number;
-  available_numbers?: number[];
-  start_time?: string;   // nieuw
-  end_time?: string;     // nieuw
-}) {
-  
-  const res = await fetch(`${API_BASE_URL}/competitions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error('Aanmaken mislukt');
-  return res.json();
-}
-
-export async function updateCompetition(id: number, data: any) {
-  const res = await fetch(`${API_BASE_URL}/competitions/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error('Updaten mislukt');
-  return res.json();
-}
-
-export async function deleteCompetition(id: number) {
-  const res = await fetch(`${API_BASE_URL}/competitions/${id}`, {
-    method: 'DELETE',
-    headers: authHeaders(),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Verwijderen mislukt: ${text}`);
-  }
-  return true;
 }
 
 export async function updateCompetitionStatus(id: number, status: string) {
@@ -104,95 +30,79 @@ export async function updateCompetitionStatus(id: number, status: string) {
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify({ status }),
   });
-  if (!res.ok) throw new Error('Status wijzigen mislukt');
+  if (!res.ok) throw new Error('Kon status niet bijwerken');
   return res.json();
 }
 
-// ========== Deelnemers ==========
+// Delete competitie met checks
+export async function deleteCompetition(id: number) {
+  // Eerst competition ophalen om deelnemers en status te checken
+  const competition = await fetchCompetition(id);
+  if (competition.participants.length > 0) {
+    throw new Error('Wedstrijd kan niet verwijderd worden: er zijn al deelnemers.');
+  }
+  if (competition.status === 'active' || competition.status === 'completed') {
+    throw new Error('Wedstrijd kan alleen verwijderd worden als deze nog gepland is.');
+  }
+
+  // DELETE request
+  const res = await fetch(`${API_BASE_URL}/competitions/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Kon wedstrijd niet verwijderen: ${text || res.status}`);
+  }
+  return true;
+}
+
+// --- Deelnemers ---
 export async function addParticipant(competitionId: number, name: string, number?: number) {
   const res = await fetch(`${API_BASE_URL}/competitions/${competitionId}/participants`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify({ name, number }),
   });
-  if (!res.ok) {
-    let errorDetail = '';
-    try {
-      const errorJson = await res.json();
-      errorDetail = JSON.stringify(errorJson.detail || errorJson);
-    } catch {
-      errorDetail = await res.text();
-    }
-    throw new Error(`Toevoegen mislukt (${res.status}): ${errorDetail}`);
-  }
+  if (!res.ok) throw new Error('Kon deelnemer niet toevoegen');
   return res.json();
 }
 
-export async function updateParticipant(participantId: number, name: string, number?: number) {
-  const res = await fetch(`${API_BASE_URL}/participants/${participantId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify({ name, number }),
-  });
-  if (!res.ok) throw new Error('Deelnemer updaten mislukt');
-  return res.json();
-}
-
-export async function deleteParticipant(participantId: number) {
-  const res = await fetch(`${API_BASE_URL}/participants/${participantId}`, {
-    method: 'DELETE',
-    headers: authHeaders(),
-  });
-  if (!res.ok) throw new Error('Deelnemer verwijderen mislukt');
-  return res.json();
-}
-
-// ========== Vangsten ==========
+// --- Vangsten ---
 export async function addCatch(participantId: number, catchData: { species: string; weight: number; time?: string }) {
   const res = await fetch(`${API_BASE_URL}/participants/${participantId}/catches`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(catchData),
   });
-  if (!res.ok) throw new Error('Vangst toevoegen mislukt');
+  if (!res.ok) throw new Error('Kon vangst niet registreren');
   return res.json();
 }
 
-export async function updateCatch(catchId: number, catchData: { species: string; weight: number; time?: string }) {
-  const res = await fetch(`${API_BASE_URL}/catches/${catchId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify(catchData),
-  });
-  if (!res.ok) throw new Error('Vangst updaten mislukt');
-  return res.json();
-}
-
-export async function deleteCatch(catchId: number) {
-  const res = await fetch(`${API_BASE_URL}/catches/${catchId}`, {
-    method: 'DELETE',
-    headers: authHeaders(),
-  });
-  if (!res.ok) throw new Error('Vangst verwijderen mislukt');
-  return res.json();
-}
-
-// ========== Hulpfuncties ==========
+// --- Random nummer toewijzen ---
 export async function assignNumbersRandomly(competitionId: number) {
   const res = await fetch(`${API_BASE_URL}/competitions/${competitionId}/assign-numbers`, {
     method: 'POST',
     headers: authHeaders(),
   });
-  if (!res.ok) throw new Error('Nummer toewijzen mislukt');
+  if (!res.ok) throw new Error('Kon nummers niet willekeurig verdelen');
   return res.json();
 }
 
+// --- Wedstrijd patchen ---
 export async function patchCompetition(id: number, data: any) {
   const res = await fetch(`${API_BASE_URL}/competitions/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Updaten mislukt');
+  if (!res.ok) throw new Error('Kon wedstrijd niet bijwerken');
+  return res.json();
+}
+
+// --- Weer endpoint ---
+export async function fetchWeatherForCompetition(id: number) {
+  const res = await fetch(`${API_BASE_URL}/competitions/${id}/weather`, { headers: authHeaders() });
+  if (!res.ok) throw new Error('Kon weer niet ophalen');
   return res.json();
 }
