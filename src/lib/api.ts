@@ -184,16 +184,23 @@ export async function deleteCatch(catchId: number) {
 
 // ========== Hulpfuncties ==========
 export const assignNumbersRandomly = async (competitionId: number) => {
-  // Let op: verander 'draw-numbers' naar 'assign-numbers'
+  // Zorg dat dit exact overeenkomt met @app.post("/competitions/{comp_id}/assign-numbers")
   const res = await fetch(`${API_BASE_URL}/competitions/${competitionId}/assign-numbers`, {
     method: 'POST',
-    headers: authHeaders(),
+    headers: {
+      ...authHeaders(), // Verstuurt je Bearer token
+    },
   });
-  
+
+  if (res.status === 404) {
+    throw new Error("Route niet gevonden op de server (/assign-numbers). Controleer je backend.");
+  }
+
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: 'Kon nummers niet verdelen' }));
+    const err = await res.json().catch(() => ({ detail: 'Fout bij toewijzen' }));
     throw new Error(err.detail || 'Kon nummers niet verdelen');
   }
+  
   return res.json();
 };
 
