@@ -468,7 +468,7 @@ def delete_catch(
     return {"ok": True}
 
 # ---------- NUMMERS LOTTEN ----------
-@router.post("/competitions/{competition_id}/draw-numbers")
+@app.post("/competitions/{competition_id}/draw-numbers")
 def draw_numbers(competition_id: int, db: Session = Depends(get_db)):
     competition = db.query(models.Competition).filter(
         models.Competition.id == competition_id
