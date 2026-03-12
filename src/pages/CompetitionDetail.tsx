@@ -260,9 +260,10 @@ const statusMutation = useMutation({
     e.currentTarget.reset();
   };
 
-  const handleRandomAssign = () => {
-    randomAssignMutation.mutate(competitionId);
-  };
+const handleRandomAssign = () => {
+  console.log('Loot nummers geklikt voor wedstrijd', competitionId);
+  randomAssignMutation.mutate(competitionId);
+};
 
   const handleAddCatch = (participantId: number) => (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
