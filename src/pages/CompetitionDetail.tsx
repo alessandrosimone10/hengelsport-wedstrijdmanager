@@ -3,10 +3,10 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   fetchCompetition,
-  deleteCompetition,
   updateCompetitionStatus,
   addParticipant,
   addCatch,
+  deleteCompetition,
   patchCompetition,
   assignNumbersRandomly,
   authHeaders,
@@ -17,42 +17,32 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
   ArrowLeft,
-  Trash2,
-  Sun,
-  Cloud,
-  CloudRain,
-  Coins,
-  UserPlus,
-  Shuffle,
-  Fish,
-  Wind,
-  Droplets,
   Calendar,
+  Coins,
+  Download,
+  Fish,
+  Hash,
   MapPin,
   Plus,
+  Shuffle,
+  Trash2,
   Trophy,
-  Download,
-  Hash
+  UserPlus,
+  Cloud,
+  CloudRain,
+  Sun,
+  Wind,
+  Droplets,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL ||
-  "https://hengelsport-wedstrijdmanager.onrender.com";
-
-const statusConfig = {
-  upcoming: { label: 'Gepland', variant: 'secondary' as const },
-  active: { label: 'Actief', variant: 'default' as const },
-  completed: { label: 'Afgelopen', variant: 'outline' as const },
-};
-
-// Helper voor prijspercentages
+// Hulpfunctie voor standaard prijspercentages
 function getDefaultPercentages(count: number): number[] {
   if (count === 1) return [100];
   if (count === 2) return [60, 40];
@@ -61,6 +51,14 @@ function getDefaultPercentages(count: number): number[] {
   const rest = 100 - base * count;
   return Array.from({ length: count }, (_, i) => base + (i < rest ? 1 : 0));
 }
+
+const statusConfig = {
+  upcoming: { label: 'Gepland', variant: 'secondary' as const },
+  active: { label: 'Actief', variant: 'default' as const },
+  completed: { label: 'Afgelopen', variant: 'outline' as const },
+};
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001';
 
 export default function CompetitionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -119,7 +117,6 @@ export default function CompetitionDetail() {
     onSuccess: () => {
       toast.success('Wedstrijd verwijderd');
       navigate('/competitions');
-      queryClient.invalidateQueries({ queryKey: ['competitions'] });
     },
     onError: (err: Error) => toast.error(`Verwijderen mislukt: ${err.message}`),
   });
@@ -145,19 +142,18 @@ export default function CompetitionDetail() {
   });
 
   const addCatchMutation = useMutation({
-    mutationFn: ({ participantId, species, weight }: { participantId: number; species: string; weight: number }) =>
-      addCatch(participantId, { species, weight }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['competition', competitionId] }),
-    onError: (err: Error) => toast.error(`Vangst toevoegen mislukt: ${err.message}`),
-  });
-
-  const assignNumbersMutation = useMutation({
-    mutationFn: () => assignNumbersRandomly(competitionId),
+    mutationFn: ({
+      participantId,
+      catchData,
+    }: {
+      participantId: number;
+      catchData: { species: string; weight: number; time?: string };
+    }) => addCatch(participantId, catchData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['competition', competitionId] });
-      toast.success('Nummers willekeurig verdeeld!');
+      toast.success('Vangst geregistreerd');
     },
-    onError: (err: Error) => toast.error(`Nummers toewijzen mislukt: ${err.message}`),
+    onError: (err: Error) => toast.error(`Vangst toevoegen mislukt: ${err.message}`),
   });
 
   const updateCompetitionMutation = useMutation({
@@ -167,6 +163,15 @@ export default function CompetitionDetail() {
       toast.success('Instellingen opgeslagen');
     },
     onError: (err: Error) => toast.error(`Opslaan mislukt: ${err.message}`),
+  });
+
+  const randomAssignMutation = useMutation({
+    mutationFn: (competitionId: number) => assignNumbersRandomly(competitionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['competition', competitionId] });
+      toast.success('Nummers willekeurig verdeeld!');
+    },
+    onError: (err: Error) => toast.error(`Toewijzen mislukt: ${err.message}`),
   });
 
   // ----- Loading / error states -----
@@ -217,19 +222,19 @@ export default function CompetitionDetail() {
     year: 'numeric',
   });
 
-  const participants = competition.participants ?? [];
-  const ranked = [...participants]
+  // Ranking
+  const ranked = [...competition.participants]
     .map(p => ({ ...p, total: getTotalWeight(p) }))
     .sort((a, b) => b.total - a.total);
 
   // Prijzenpot berekening
   const entryFee = competition.entry_fee ?? 0;
-  const calculatedPot = entryFee * participants.length;
+  const calculatedPot = entryFee * competition.participants.length;
   const prizePot = competition.custom_prize_pot ?? calculatedPot;
   const fishFundPct = competition.fish_fund_percentage ?? 25;
   const fishFundAmount = prizePot * (fishFundPct / 100);
   const distributablePot = prizePot - fishFundAmount;
-  const prizeWinners = competition.prize_distribution ?? Math.min(3, participants.length);
+  const prizeWinners = competition.prize_distribution ?? Math.min(3, competition.participants.length);
   const prizePercentages = competition.prize_percentages ?? getDefaultPercentages(prizeWinners);
   const prizeAmounts = prizePercentages.map(pct => distributablePot * (pct / 100));
 
@@ -248,19 +253,29 @@ export default function CompetitionDetail() {
     e.currentTarget.reset();
   };
 
+  const handleRandomAssign = () => {
+    randomAssignMutation.mutate(competitionId);
+  };
+
   const handleAddCatch = (participantId: number) => (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const weight = Number(form.get('weight'));
-    const species = form.get('species') as string;
-    if (!weight || !species) return;
-    addCatchMutation.mutate({ participantId, species, weight });
+    if (!weight) return;
+    addCatchMutation.mutate({
+      participantId,
+      catchData: { species: '', weight, time: '' },
+    });
     e.currentTarget.reset();
   };
 
-  const handleDelete = () => deleteMutation.mutate(competitionId);
-  const handleStatusChange = (newStatus: string) => statusMutation.mutate({ id: competitionId, status: newStatus });
-  const handleRandomAssign = () => assignNumbersMutation.mutate();
+  const handleDelete = () => {
+    deleteMutation.mutate(competitionId);
+  };
+
+  const handleStatusChange = (newStatus: string) => {
+    statusMutation.mutate({ id: competitionId, status: newStatus });
+  };
 
   const handleUpdateEntryFee = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -313,7 +328,7 @@ export default function CompetitionDetail() {
   };
 
   const handleExportCSV = () => {
-    const totalCatches = participants.reduce((s, p) => s + p.catches.length, 0);
+    const totalCatches = competition.participants.reduce((s, p) => s + p.catches.length, 0);
     const html = `<!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -358,12 +373,12 @@ export default function CompetitionDetail() {
     <div class="meta">
       <span>📅 ${dateStr}</span>
       <span>📍 ${competition.location}</span>
-      <span>👥 ${participants.length} deelnemers</span>
+      <span>👥 ${competition.participants.length} deelnemers</span>
     </div>
   </div>
   <div class="body">
     <div class="stats">
-      <div class="stat"><div class="label">Deelnemers</div><div class="value">${participants.length}</div></div>
+      <div class="stat"><div class="label">Deelnemers</div><div class="value">${competition.participants.length}</div></div>
       <div class="stat"><div class="label">Totaal vangsten</div><div class="value">${totalCatches}</div></div>
       ${prizePot > 0 ? `<div class="stat"><div class="label">Prijzenpot</div><div class="value">€${prizePot.toFixed(2)}</div></div>` : ''}
       ${fishFundAmount > 0 ? `<div class="stat"><div class="label">Visfonds (${fishFundPct}%)</div><div class="value">€${fishFundAmount.toFixed(2)}</div></div>` : ''}
@@ -406,7 +421,6 @@ export default function CompetitionDetail() {
     toast.success('Uitslag geëxporteerd als HTML');
   };
 
-  // ----- Render -----
   return (
     <div className="space-y-6">
       <Button variant="ghost" size="sm" asChild>
@@ -454,7 +468,7 @@ export default function CompetitionDetail() {
         </div>
       </motion.div>
 
-      {/* Weer */}
+      {/* Weer info */}
       {loadingWeather && (
         <Card>
           <CardContent className="pt-6 text-center">
@@ -506,7 +520,7 @@ export default function CompetitionDetail() {
       )}
 
       {/* Prijzenpot */}
-      {participants.length > 0 && (
+      {competition.participants.length > 0 && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="flex items-center gap-2 font-display text-lg">
@@ -545,7 +559,7 @@ export default function CompetitionDetail() {
                       name="prizeCount"
                       type="number"
                       min="1"
-                      max={participants.length}
+                      max={competition.participants.length}
                       defaultValue={prizeWinners}
                       onChange={(e) => {
                         const count = Number(e.target.value);
@@ -627,7 +641,7 @@ export default function CompetitionDetail() {
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">Bezetting</p>
               <p className="text-sm font-mono">
-                {participants.length} / {competition.max_participants} deelnemers
+                {competition.participants.length} / {competition.max_participants} deelnemers
               </p>
             </div>
           </CardContent>
@@ -648,50 +662,18 @@ export default function CompetitionDetail() {
                 Export
               </Button>
             )}
-              {participants.length > 0 && competition.available_numbers && competition.available_numbers.length >= participants.length && (
-            <Button size="sm" variant="outline" onClick={handleRandomAssign}>
-            <Shuffle className="mr-2 h-4 w-4" />
-            Loot nummers
-            </Button>
+            {competition.participants.length > 0 && competition.available_numbers && competition.available_numbers.length >= competition.participants.length && (
+              <Button size="sm" variant="outline" onClick={handleRandomAssign}>
+                <Shuffle className="mr-2 h-4 w-4" />
+                Loot nummers
+              </Button>
             )}
             {/* Beschikbare nummers instellen */}
-            {participants.length > 0 && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size="sm" variant="outline">
-                  {participants.length > 0 &&
-                  competition.available_numbers &&
-                  competition.available_numbers.length >= participants.length && (
-                    <Button size="sm" variant="outline" onClick={handleRandomAssign}>
-                      <Shuffle className="mr-2 h-4 w-4" />
-                      Loot nummers
-                    </Button>
-                  )}
-            {/* Beschikbare nummers instellen */}
-            {participants.length > 0 && (
+            {competition.participants.length > 0 && (
               <Dialog>
                 <DialogTrigger asChild>
                   <Button size="sm" variant="outline">
                     <Hash className="mr-2 h-4 w-4" />
-                    Nummers
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Nummerbeheer</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleUpdateAvailableNumbers} className="space-y-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="available_numbers">Beschikbare nummers</Label>
-                      <Textarea
-                        id="available_numbers"
-                        name="available_numbers"
-                        placeholder="bijv. 1, 5, 8, 12, 19, 22, 35"
-                        defaultValue={competition.available_numbers?.join(', ') ?? ''}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Stel de beschikbare peknummers in. Met "Loot nummers" worden ze willekeurig verdeeld.
- w-4" />
                     Nummers
                   </Button>
                 </DialogTrigger>
@@ -717,7 +699,7 @@ export default function CompetitionDetail() {
                   <div className="border-t pt-4">
                     <p className="text-sm font-semibold mb-2">Huidige nummers</p>
                     <div className="text-xs text-muted-foreground space-y-1 rounded-lg bg-muted p-3 mb-3">
-                      {participants.map((p, i) => (
+                      {competition.participants.map((p, i) => (
                         <div key={p.id}>{i + 1}. {p.name} → {p.number ?? '...'}</div>
                       ))}
                     </div>
@@ -796,79 +778,6 @@ export default function CompetitionDetail() {
                           </DialogHeader>
                           <form onSubmit={handleAddCatch(p.id)} className="space-y-4">
                             <div className="space-y-2">
-                              <Label htmlFor="species">Vissoort</Label>
-                              <Input id="species" name="species" placeholder="bijv. Karper" required />
-                            </div>
-                            <div className="space-y-2">
-                              <Label htmlFor="weight">Gewicht (gram)</Label>
-                              <Input id="weight" name="weight" type="number" min="1" placeholder="bijv. 3500" required autoFocus />
-                            </div>
-                            <Button type="submit" className="w-full">Registreren</Button>
-                          </form>
-                        </DialogContent>
-                      </Dialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              <TableBody>
-              </Label>
-                    <Input id="pnumber" name="number" type="number" min="1" placeholder="bijv. 8" />
-                  </div>
-                  <Button type="submit" className="w-full">Toevoegen</Button>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {ranked.length === 0 ? (
-            <p className="py-6 text-center text-muted-foreground">
-              Nog geen deelnemers. Voeg deelnemers toe om te beginnen.
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">#</TableHead>
-                  <TableHead className="w-16">Nr.</TableHead>
-                  <TableHead>Naam</TableHead>
-                  <TableHead className="text-right">Gewicht</TableHead>
-                  <TableHead className="w-12" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ranked.map((p, i) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-mono font-semibold text-muted-foreground">
-                      {i + 1}
-                    </TableCell>
-                    <TableCell className="font-mono text-muted-foreground">
-                      {p.number ?? '—'}
-                    </TableCell>
-                    <TableCell className="font-medium">{p.name}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold">
-                      {formatWeight(p.total)}
-                    </TableCell>
-                    <TableCell>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button size="icon" variant="ghost" className="h-8 w-8">
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                              <Fish className="h-5 w-5 text-primary" />
-                              Gewicht voor {p.name}
-                            </DialogTitle>
-                          </DialogHeader>
-                          <form onSubmit={handleAddCatch(p.id)} className="space-y-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="species">Vissoort</Label>
-                              <Input id="species" name="species" placeholder="bijv. Karper" required />
-                            </div>
-                            <div className="space-y-2">
                               <Label htmlFor="weight">Gewicht (gram)</Label>
                               <Input id="weight" name="weight" type="number" min="1" placeholder="bijv. 3500" required autoFocus />
                             </div>
@@ -899,8 +808,8 @@ export default function CompetitionDetail() {
               <div key={p.id}>
                 <h4 className="mb-2 font-semibold text-sm">{p.name}</h4>
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {p.catches.map((c, idx) => (
-                    <div key={idx} className="flex items-center justify-between rounded-lg border bg-muted/50 px-3 py-2 text-sm">
+                  {p.catches.map(c => (
+                    <div key={c.id} className="flex items-center justify-between rounded-lg border bg-muted/50 px-3 py-2 text-sm">
                       <div>
                         <span className="font-medium">{c.species}</span>
                         <span className="ml-2 text-muted-foreground">{c.time}</span>
