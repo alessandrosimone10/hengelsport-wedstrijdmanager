@@ -209,8 +209,14 @@ async def create_competition(
     db.add(db_comp)
     db.commit()
     db.refresh(db_comp)
-    return db_comp
 
+    # 🔧 Zet start_time en end_time om naar string voor de response
+    if db_comp.start_time:
+        db_comp.start_time = str(db_comp.start_time)
+    if db_comp.end_time:
+        db_comp.end_time = str(db_comp.end_time)
+
+    return db_comp
 @app.delete("/competitions/{comp_id}")
 def delete_competition(
         comp_id: int,
