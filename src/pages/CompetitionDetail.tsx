@@ -172,7 +172,7 @@ const statusMutation = useMutation({
     onError: (err: Error) => toast.error(`Opslaan mislukt: ${err.message}`),
   });
 
- const randomAssignMutation = useMutation({
+const randomAssignMutation = useMutation({
   mutationFn: (competitionId: number) => assignNumbersRandomly(competitionId),
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ['competition', competitionId] });
@@ -261,10 +261,9 @@ const statusMutation = useMutation({
   };
 
 const handleRandomAssign = () => {
-  console.log('Loot nummers geklikt voor wedstrijd', competitionId);
   randomAssignMutation.mutate(competitionId);
 };
-
+  
   const handleAddCatch = (participantId: number) => (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
