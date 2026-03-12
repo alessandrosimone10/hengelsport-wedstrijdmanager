@@ -740,38 +740,6 @@ export default function CompetitionDetail() {
                     <Input id="pname" name="name" placeholder="Naam deelnemer" required />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="pnumber">Nummer (optioneel                      </p>
-                    </div>
-                    <Button type="submit" className="w-full" variant="outline">Nummers opslaan</Button>
-                  </form>
-                  <div className="border-t pt-4">
-                    <p className="text-sm font-semibold mb-2">Huidige nummers</p>
-                    <div className="text-xs text-muted-foreground space-y-1 rounded-lg bg-muted p-3 mb-3">
-                      {participants.map((p, i) => (
-                        <div key={p.id}>{i + 1}. {p.name} → {p.number ?? '...'}</div>
-                      ))}
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline">
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Deelnemer
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Deelnemer toevoegen</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleAddParticipant} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="pname">Naam</Label>
-                    <Input id="pname" name="name" placeholder="Naam deelnemer" required />
-                  </div>
-                  <div className="space-y-2">
                     <Label htmlFor="pnumber">Nummer (optioneel)</Label>
                     <Input id="pnumber" name="number" type="number" min="1" placeholder="bijv. 8" />
                   </div>
