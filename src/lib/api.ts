@@ -98,13 +98,20 @@ export async function deleteCompetition(id: number) {
 export async function updateCompetitionStatus(id: number, status: string) {
   const res = await fetch(`${API_BASE_URL}/competitions/${id}`, {
     method: "PATCH",
-    headers: authHeaders(),
+    headers: {
+      ...authHeaders(),
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ status }),
   });
+
   if (!res.ok) {
-    throw new Error("Status wijzigen mislukt");
+    const text = await res.text();
+    throw new Error(text);
   }
+
   return res.json();
+};
 }
 // ========== Deelnemers ==========
 export async function addParticipant(competitionId: number, name: string, number?: number) {
