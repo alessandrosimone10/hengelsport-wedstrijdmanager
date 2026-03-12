@@ -690,29 +690,30 @@ const handleRandomAssign = () => {
             Klassement
           </CardTitle>
           <div className="flex gap-2 flex-wrap">
-            {ranked.length > 0 && (
-              <Button size="sm" variant="outline" onClick={handleExportCSV}>
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-     {competition.participants.length > 0 && (
-        <Button
-        size="sm"
-        variant="outline"
-        onClick={handleRandomAssign}
-        disabled={!competition.available_numbers || competition.available_numbers.length < competition.participants.length}
-        title={
-        !competition.available_numbers
+           {ranked.length > 0 && (
+  <Button size="sm" variant="outline" onClick={handleExportCSV}>
+    <Download className="mr-2 h-4 w-4" />
+    Export
+  </Button>
+)}
+{competition.participants.length > 0 && (
+  <Button
+    size="sm"
+    variant="outline"
+    onClick={handleRandomAssign}
+    disabled={!competition.available_numbers || competition.available_numbers.length < competition.participants.length}
+    title={
+      !competition.available_numbers
         ? "Geen beschikbare nummers ingesteld"
         : competition.available_numbers.length < competition.participants.length
         ? "Te weinig nummers voor aantal deelnemers"
         : "Nummers willekeurig verdelen"
-        }
-      >
-        <Shuffle className="mr-2 h-4 w-4" />
-        Loot nummers
-        </Button>
-        )}
+    }
+  >
+    <Shuffle className="mr-2 h-4 w-4" />
+    Loot nummers
+  </Button>
+)}
             {/* Beschikbare nummers instellen */}
             {competition.participants.length > 0 && (
               <Dialog>
