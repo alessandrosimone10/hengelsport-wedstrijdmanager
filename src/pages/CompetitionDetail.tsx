@@ -722,37 +722,45 @@ const handleRandomAssign = () => {
                     <Hash className="mr-2 h-4 w-4" />
                     Nummers
                   </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Nummerbeheer</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleUpdateAvailableNumbers} className="space-y-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="available_numbers">Beschikbare nummers</Label>
-                      <Textarea
-                        id="available_numbers"
-                        name="available_numbers"
-                        placeholder="bijv. 1, 5, 8, 12, 19, 22, 35"
-                        defaultValue={competition.available_numbers?.join(', ') ?? ''}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Stel de beschikbare peknummers in. Met "Loot nummers" worden ze willekeurig verdeeld.
-                      </p>
-                    </div>
-                    <Button type="submit" className="w-full" variant="outline">Nummers opslaan</Button>
-                  </form>
-                  <div className="border-t pt-4">
-                    <p className="text-sm font-semibold mb-2">Huidige nummers</p>
-                    <div className="text-xs text-muted-foreground space-y-1 rounded-lg bg-muted p-3 mb-3">
-                      {competition.participants.map((p, i) => (
-                        <div key={p.id}>{i + 1}. {p.name} → {p.number ?? '...'}</div>
-                      ))}
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
+                <DialogTrigger asChild>
+  <Button size="sm" variant="outline">
+    <Hash className="mr-2 h-4 w-4" />
+    Nummers
+  </Button>
+</DialogTrigger>
+<DialogContent>
+  <DialogHeader>
+    <DialogTitle>Nummerbeheer</DialogTitle>
+    <DialogDescription>
+      Stel hier de beschikbare nummers in voor de deelnemers. Klik op "Opslaan" om de wijzigingen te bevestigen.
+    </DialogDescription>
+  </DialogHeader>
+
+  <form onSubmit={handleUpdateAvailableNumbers} className="space-y-3">
+    <div className="space-y-2">
+      <Label htmlFor="available_numbers">Beschikbare nummers</Label>
+      <Textarea
+        id="available_numbers"
+        name="available_numbers"
+        placeholder="bijv. 1, 5, 8, 12, 19, 22, 35"
+        defaultValue={competition.available_numbers?.join(', ') ?? ''}
+      />
+      <p className="text-xs text-muted-foreground">
+        Met "Loot nummers" worden ze willekeurig verdeeld.
+      </p>
+    </div>
+    <Button type="submit" className="w-full" variant="outline">Nummers opslaan</Button>
+  </form>
+
+  <div className="border-t pt-4">
+    <p className="text-sm font-semibold mb-2">Huidige nummers</p>
+    <div className="text-xs text-muted-foreground space-y-1 rounded-lg bg-muted p-3 mb-3">
+      {competition.participants.map((p, i) => (
+        <div key={p.id}>{i + 1}. {p.name} → {p.number ?? '...'}</div>
+      ))}
+    </div>
+  </div>
+</DialogContent>
             <Dialog>
               <DialogTrigger asChild>
                 <Button size="sm" variant="outline">
