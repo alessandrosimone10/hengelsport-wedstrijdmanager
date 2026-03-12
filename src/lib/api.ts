@@ -2,11 +2,15 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001';
 
 // Helper om token aan request toe te voegen
-export function authHeaders(): HeadersInit {  // <-- voeg export toe
-  const token = localStorage.getItem('token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
+export function authHeaders(): HeadersInit {
+  const token = localStorage.getItem('token'); // Check of dit in je Login component ook 'token' heet!
+  if (!token) return {};
+  
+  return { 
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json' // Het is veiliger om dit hier standaard toe te voegen
+  };
 }
-
 // ========== Authenticatie ==========
 export async function login(email: string, password: string) {
   const formData = new URLSearchParams();
@@ -184,24 +188,11 @@ export async function deleteCatch(catchId: number) {
 
 // ========== Hulpfuncties ==========
 export const assignNumbersRandomly = async (competitionId: number) => {
-  // Zorg dat dit exact overeenkomt met @app.post("/competitions/{comp_id}/assign-numbers")
-  const res = await fetch(`${API_BASE_URL}/competitions/${competitionId}/assign-numbers`, {
+  // Let op de slash tussen de basis URL en de rest
+  return await fetch(`${API_BASE_URL}/competitions/${competitionId}/assign-numbers`, {
     method: 'POST',
-    headers: {
-      ...authHeaders(), // Verstuurt je Bearer token
-    },
+    headers: authHeaders(),
   });
-
-  if (res.status === 404) {
-    throw new Error("Route niet gevonden op de server (/assign-numbers). Controleer je backend.");
-  }
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: 'Fout bij toewijzen' }));
-    throw new Error(err.detail || 'Kon nummers niet verdelen');
-  }
-  
-  return res.json();
 };
 
 export async function patchCompetition(id: number, data: any) {
