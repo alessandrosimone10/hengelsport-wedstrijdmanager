@@ -184,12 +184,14 @@ export async function deleteCatch(catchId: number) {
 
 // ========== Hulpfuncties ==========
 export const assignNumbersRandomly = async (competitionId: number) => {
-  const res = await fetch(`${API_BASE_URL}/competitions/${competitionId}/draw-numbers`, {
+  // Verander 'draw-numbers' naar 'assign-numbers'
+  const res = await fetch(`${API_BASE_URL}/competitions/${competitionId}/assign-numbers`, {
     method: 'POST',
     headers: authHeaders(),
   });
+  
   if (!res.ok) {
-    const err = await res.json();
+    const err = await res.json().catch(() => ({ detail: 'Kon nummers niet verdelen' }));
     throw new Error(err.detail || 'Kon nummers niet verdelen');
   }
   return res.json();
