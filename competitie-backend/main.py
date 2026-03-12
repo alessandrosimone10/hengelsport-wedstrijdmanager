@@ -470,24 +470,24 @@ def delete_catch(
 # ---------- NUMMERS LOTTEN ----------
 @app.post("/competitions/{competition_id}/draw-numbers")
 def draw_numbers(competition_id: int, db: Session = Depends(get_db)):
-    competition = db.query(models.Competition).filter(
-        models.Competition.id == competition_id
-    ).first()
+    competition = db.query(Competition).filter(Competition.id == competition_id).first()
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
-    participants = db.query(models.Participant).filter(
-        models.Participant.competition_id == competition_id
-    ).all()
+
+    participants = db.query(Participant).filter(Participant.competition_id == competition_id).all()
     numbers = competition.available_numbers
-    if not numbers:
-        raise HTTPException(status_code=400, detail="No available numbers")
-    if len(numbers) < len(participants):
-        raise HTTPException(status_code=400, detail="Not enough numbers")
+
+    if not numbers or len(numbers) < len(participants):
+        raise HTTPException(status_code=400, detail="Niet genoeg beschikbare nummers")
+
     random.shuffle(numbers)
+
     for i, participant in enumerate(participants):
         participant.number = numbers[i]
+
     db.commit()
-    return {"message": "Numbers assigned"}
+    return {"message": "Numbers assigned successfully"}
+    
 # ---------- WEER ----------
 @app.get("/competitions/{comp_id}/weather")
 async def get_competition_weather(
