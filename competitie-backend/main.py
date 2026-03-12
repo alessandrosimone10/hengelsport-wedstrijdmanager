@@ -1,7 +1,6 @@
 import random
 import time
 import asyncio
-
 import geocoding
 import weather
 
@@ -469,26 +468,26 @@ def delete_catch(
     return {"ok": True}
 
 # ---------- NUMMERS LOTTEN ----------
-@app.post("/competitions/{comp_id}/assign-numbers")
-def assign_numbers(
-        comp_id: int,
-        db: Session = Depends(get_db),
-        current_user: models.User = Depends(get_current_user)
-):
-    comp = db.query(models.Competition).filter(
-        models.Competition.id == comp_id,
-        models.Competition.owner_id == current_user.id
+@router.post("/competitions/{competition_id}/draw-numbers")
+def draw_numbers(competition_id: int, db: Session = Depends(get_db)):
+    competition = db.query(models.Competition).filter(
+        models.Competition.id == competition_id
     ).first()
-    if not comp or not comp.available_numbers:
-        raise HTTPException(400, "Geen beschikbare nummers")
-    numbers = comp.available_numbers[:]
+    if not competition:
+        raise HTTPException(status_code=404, detail="Competition not found")
+    participants = db.query(models.Participant).filter(
+        models.Participant.competition_id == competition_id
+    ).all()
+    numbers = competition.available_numbers
+    if not numbers:
+        raise HTTPException(status_code=400, detail="No available numbers")
+    if len(numbers) < len(participants):
+        raise HTTPException(status_code=400, detail="Not enough numbers")
     random.shuffle(numbers)
-    for i, part in enumerate(comp.participants):
-        if i < len(numbers):
-            part.number = numbers[i]
+    for i, participant in enumerate(participants):
+        participant.number = numbers[i]
     db.commit()
-    return {"ok": True}
-
+    return {"message": "Numbers assigned"}
 # ---------- WEER ----------
 @app.get("/competitions/{comp_id}/weather")
 async def get_competition_weather(
