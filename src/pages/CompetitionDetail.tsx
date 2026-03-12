@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext'; // <-- TOEGEVOEGD
 
 // Hulpfunctie voor standaard prijspercentages
 function getDefaultPercentages(count: number): number[] {
@@ -65,6 +66,7 @@ export default function CompetitionDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const competitionId = Number(id);
+  const { user } = useAuth(); // <-- TOEGEVOEGD
 
   // ----- Weer state -----
   const [weather, setWeather] = useState<any>(null);
@@ -421,6 +423,27 @@ export default function CompetitionDetail() {
     toast.success('Uitslag geëxporteerd als HTML');
   };
 
+  // ----- Force verwijderen handler -----
+  const handleForceDelete = async () => {
+    if (!window.confirm('Weet je zeker dat je deze wedstrijd en ALLE bijbehorende gegevens (deelnemers, vangsten, aanmeldingen) permanent wilt verwijderen?')) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/competitions/${competitionId}/force`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Verwijderen mislukt');
+      }
+      toast.success('Wedstrijd en alle gegevens verwijderd');
+      navigate('/competitions');
+    } catch (err) {
+      toast.error(`Fout: ${err.message}`);
+    }
+  };
+
+  // ----- Render -----
   return (
     <div className="space-y-6">
       <Button variant="ghost" size="sm" asChild>
@@ -465,6 +488,11 @@ export default function CompetitionDetail() {
           <Button size="sm" variant="destructive" onClick={handleDelete}>
             <Trash2 className="h-4 w-4" />
           </Button>
+          {user?.is_admin && (
+            <Button size="sm" variant="destructive" onClick={handleForceDelete} className="ml-2">
+              Force verwijderen
+            </Button>
+          )}
         </div>
       </motion.div>
 
