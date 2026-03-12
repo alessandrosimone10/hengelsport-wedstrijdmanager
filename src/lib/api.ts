@@ -198,9 +198,18 @@ export const assignNumbersRandomly = async (competitionId: number) => {
 export async function patchCompetition(id: number, data: any) {
   const res = await fetch(`${API_BASE_URL}/competitions/${id}`, {
     method: "PATCH",
-    headers: authHeaders(),
+    headers: {
+      ...authHeaders(),
+      "Content-Type": "application/json", // <-- Cruciaal: dit ontbrak!
+    },
     body: JSON.stringify(data),
   });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Update mislukt" }));
+    throw new Error(err.detail || "Competition update failed");
+  }
+  return res.json();
+}
   if (!res.ok) {
     throw new Error("Competition update failed");
   }
