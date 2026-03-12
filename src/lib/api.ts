@@ -112,7 +112,7 @@ export async function updateCompetitionStatus(id: number, status: string) {
 
   return res.json();
 };
-}
+
 // ========== Deelnemers ==========
 export async function addParticipant(competitionId: number, name: string, number?: number) {
   const res = await fetch(`${API_BASE_URL}/competitions/${competitionId}/participants`, {
