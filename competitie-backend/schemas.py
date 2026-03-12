@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, time
 
 # ---------- Authentication ----------
 class UserBase(BaseModel):
@@ -37,8 +37,11 @@ class CompetitionBase(BaseModel):
     fish_fund_percentage: Optional[float] = None
     custom_prize_pot: Optional[float] = None
     max_participants: Optional[int] = None
-    start_time: Optional[str] = None
-    end_time: Optional[str] = None
+    start_time: Optional[time] = None
+    end_time: Optional[time] = None
+
+    class Config:
+        orm_mode = True
 
     class Config:
         orm_mode = True
@@ -58,8 +61,8 @@ class CompetitionUpdate(BaseModel):
     fish_fund_percentage: Optional[float] = None
     custom_prize_pot: Optional[float] = None
     max_participants: Optional[int] = None
-    start_time: Optional[str] = None
-    end_time: Optional[str] = None
+    start_time: Optional[time] = None
+    end_time: Optional[time] = None
 
     class Config:
         orm_mode = True
