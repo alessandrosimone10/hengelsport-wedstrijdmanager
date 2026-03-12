@@ -96,15 +96,16 @@ export async function deleteCompetition(id: number) {
 }
 
 export async function updateCompetitionStatus(id: number, status: string) {
-  const res = await fetch(`${API_BASE_URL}/competitions/${id}/status`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+  const res = await fetch(`${API_BASE_URL}/competitions/${id}`, {
+    method: "PATCH",
+    headers: authHeaders(),
     body: JSON.stringify({ status }),
   });
-  if (!res.ok) throw new Error('Status wijzigen mislukt');
+  if (!res.ok) {
+    throw new Error("Status wijzigen mislukt");
+  }
   return res.json();
 }
-
 // ========== Deelnemers ==========
 export async function addParticipant(competitionId: number, name: string, number?: number) {
   const res = await fetch(`${API_BASE_URL}/competitions/${competitionId}/participants`, {
@@ -186,10 +187,12 @@ export async function assignNumbersRandomly(competitionId: number) {
 
 export async function patchCompetition(id: number, data: any) {
   const res = await fetch(`${API_BASE_URL}/competitions/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    method: "PATCH",
+    headers: authHeaders(),
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error('Updaten mislukt');
+  if (!res.ok) {
+    throw new Error("Competition update failed");
+  }
   return res.json();
 }
