@@ -49,13 +49,13 @@ function WeatherInfo({ compId }: { compId: number }) {
   return (
     <div className="flex items-center gap-1 text-sm text-muted-foreground">
       <Cloud className="h-4 w-4" />
-      {data.temperature}°C
+      <span>{data.temperature}°C</span>
     </div>
   );
 }
 
 export default function PublicCompetitions() {
-  const { data: competitions = [], isLoading } = useQuery({
+  const { data: competitions = [], isLoading, error } = useQuery({
     queryKey: ["public-competitions"],
     queryFn: async () => {
       const res = await fetch(`${API_BASE_URL}/public/competitions`);
@@ -66,6 +66,13 @@ export default function PublicCompetitions() {
 
   if (isLoading)
     return <div className="p-8 text-center">Wedstrijden laden...</div>;
+
+  if (error)
+    return (
+      <div className="p-8 text-center text-red-500">
+        Fout bij laden van wedstrijden
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-background">
@@ -117,7 +124,7 @@ export default function PublicCompetitions() {
                   className="hover:shadow-lg transition-shadow"
                 >
                   <CardHeader className="pb-2">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <CardTitle>{comp.name}</CardTitle>
                       <WeatherInfo compId={comp.id} />
                     </div>
@@ -164,8 +171,8 @@ export default function PublicCompetitions() {
 
                     {comp.entry_fee > 0 && (
                       <div className="flex items-center gap-2 text-muted-foreground">
-                        <Euro className="h-4 w-4" />€{" "}
-                        {comp.entry_fee.toFixed(2)} p.p.
+                        <Euro className="h-4 w-4" />
+                        € {comp.entry_fee.toFixed(2)} p.p.
                       </div>
                     )}
 
