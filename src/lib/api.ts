@@ -183,14 +183,17 @@ export async function deleteCatch(catchId: number) {
 }
 
 // ========== Hulpfuncties ==========
-export async function assignNumbersRandomly(competitionId: number) {
-  const res = await fetch(`${API_BASE_URL}/competitions/${competitionId}/assign-numbers`, {
+export const assignNumbersRandomly = async (competitionId: number) => {
+  const res = await fetch(`${API_BASE_URL}/competitions/${competitionId}/draw-numbers`, {
     method: 'POST',
     headers: authHeaders(),
   });
-  if (!res.ok) throw new Error('Nummer toewijzen mislukt');
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || 'Kon nummers niet verdelen');
+  }
   return res.json();
-}
+};
 
 export async function patchCompetition(id: number, data: any) {
   const res = await fetch(`${API_BASE_URL}/competitions/${id}`, {
