@@ -172,14 +172,14 @@ const statusMutation = useMutation({
     onError: (err: Error) => toast.error(`Opslaan mislukt: ${err.message}`),
   });
 
-  const randomAssignMutation = useMutation({
-    mutationFn: (competitionId: number) => assignNumbersRandomly(competitionId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['competition', competitionId] });
-      toast.success('Nummers willekeurig verdeeld!');
-    },
-    onError: (err: Error) => toast.error(`Toewijzen mislukt: ${err.message}`),
-  });
+ const randomAssignMutation = useMutation({
+  mutationFn: (competitionId: number) => assignNumbersRandomly(competitionId),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['competition', competitionId] });
+    toast.success('Nummers willekeurig verdeeld!');
+  },
+  onError: (err: Error) => toast.error(`Toewijzen mislukt: ${err.message}`),
+});
 
   // ----- Loading / error states -----
   if (isNaN(competitionId)) {
