@@ -2,7 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from 'react';
 import { AuthProvider } from "@/context/AuthContext";
+const PendingParticipants = lazy(() => import('./pages/PendingParticipants'));
 import { PrivateRoute } from "@/components/PrivateRoute";
 
 import Layout from "./components/Layout";
@@ -15,11 +17,9 @@ import FishFund from "./pages/FishFund";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import PublicRegister from "./pages/PublicRegister";
-const PendingParticipants = lazy(() => import('./pages/PendingParticipants'));
 import PublicCompetitions from "./pages/PublicCompetitions";
 import CheckStatus from "./pages/CheckStatus";
 import NotFound from "./pages/NotFound";
-import { lazy, Suspense } from 'react';
 
 const App = () => (
   <AuthProvider>
