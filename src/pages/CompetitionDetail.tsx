@@ -695,12 +695,12 @@ const statusMutation = useMutation({
                 Export
               </Button>
             )}
-            {competition.participants.length > 0 && competition.available_numbers && competition.available_numbers.length >= competition.participants.length && (
-              <Button size="sm" variant="outline" onClick={handleRandomAssign}>
-                <Shuffle className="mr-2 h-4 w-4" />
-                Loot nummers
-              </Button>
-            )}
+            {competition.participants.length > 0 && (
+          <Button size="sm" variant="outline" onClick={handleRandomAssign}>
+          <Shuffle className="mr-2 h-4 w-4" />
+          Loot nummers
+          </Button>
+          )}
             {/* Beschikbare nummers instellen */}
             {competition.participants.length > 0 && (
               <Dialog>
