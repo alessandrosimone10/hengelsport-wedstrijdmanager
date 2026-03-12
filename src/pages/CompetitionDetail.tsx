@@ -36,6 +36,8 @@ import {
   MapPin,
   Plus,
   Trophy,
+  Download,
+  Hash
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
