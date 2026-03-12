@@ -42,7 +42,9 @@ import {
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://hengelsport-wedstrijdmanager.onrender.com";
 
 const statusConfig = {
   upcoming: { label: 'Gepland', variant: 'secondary' as const },
@@ -808,7 +810,8 @@ export default function CompetitionDetail() {
                     </TableCell>
                   </TableRow>
                 ))}
-              </)</Label>
+              <TableBody>
+              </Label>
                     <Input id="pnumber" name="number" type="number" min="1" placeholder="bijv. 8" />
                   </div>
                   <Button type="submit" className="w-full">Toevoegen</Button>
