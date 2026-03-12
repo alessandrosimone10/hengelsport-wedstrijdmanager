@@ -227,6 +227,39 @@ def delete_competition(
     db.commit()
     return {"ok": True}
 
+@app.delete("/admin/competitions/{comp_id}/force")
+def force_delete_competition(
+    comp_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    # Alleen admins mogen dit (jij)
+    if not current_user.is_admin:
+        raise HTTPException(403, "Niet toegestaan")
+
+    comp = db.query(models.Competition).filter(models.Competition.id == comp_id).first()
+    if not comp:
+        raise HTTPException(404, "Competitie niet gevonden")
+
+    # 1. Verwijder vangsten van deelnemers van deze wedstrijd
+    db.query(models.Catch).filter(
+        models.Catch.participant_id.in_(
+            db.query(models.Participant.id).filter(models.Participant.competition_id == comp_id)
+        )
+    ).delete(synchronize_session=False)
+
+    # 2. Verwijder deelnemers
+    db.query(models.Participant).filter(models.Participant.competition_id == comp_id).delete(synchronize_session=False)
+
+    # 3. Verwijder openstaande aanmeldingen
+    db.query(models.PendingParticipant).filter(models.PendingParticipant.competition_id == comp_id).delete(synchronize_session=False)
+
+    # 4. Verwijder de wedstrijd zelf
+    db.delete(comp)
+
+    db.commit()
+    return {"message": "Wedstrijd en alle bijbehorende gegevens verwijderd"}
+
 # ---------- DEELNEMERS ----------
 @app.post("/competitions/{comp_id}/participants", response_model=schemas.Participant)
 def add_participant(
