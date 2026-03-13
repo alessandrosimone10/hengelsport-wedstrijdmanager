@@ -3,7 +3,7 @@ import time
 import asyncio
 import geocoding
 import weather
-
+CACHE_DURATION = 1800  # 30 minuten
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -491,31 +491,46 @@ def assign_numbers(
 # ---------- WEER ----------
 @app.get("/competitions/{comp_id}/weather")
 async def get_competition_weather(
-        comp_id: int,
-        db: Session = Depends(get_db),
-        current_user: models.User = Depends(get_current_user)
+    comp_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
 ):
+    # 1. Gebruik comp_id als cache key voor maximale snelheid
+    if str(comp_id) in weather_cache:
+        cached = weather_cache[str(comp_id)]
+        if time.time() - cached["timestamp"] < CACHE_DURATION:
+            return cached["data"]
+
     comp = db.query(models.Competition).filter(
         models.Competition.id == comp_id,
         models.Competition.owner_id == current_user.id
     ).first()
+
     if not comp:
         raise HTTPException(404, "Competitie niet gevonden")
+
+    # 2. Geocoding alleen als het echt moet
     if comp.latitude is None or comp.longitude is None:
-        coordinates = await geocoding.get_coordinates_from_location(comp.location)
-        if not coordinates:
-            raise HTTPException(400, f"Geen coördinaten gevonden voor {comp.location}")
-        comp.latitude, comp.longitude = coordinates
-        db.commit()
-    cache_key = f"{comp.latitude}_{comp.longitude}"
-    if cache_key in weather_cache:
-        cached = weather_cache[cache_key]
-        if time.time() - cached["timestamp"] < CACHE_DURATION:
-            return cached["data"]
+        try:
+            # Voeg een timeout toe aan je geocoding als dat kan
+            coordinates = await geocoding.get_coordinates_from_location(comp.location)
+            if coordinates:
+                comp.latitude, comp.longitude = coordinates
+                db.commit()
+            else:
+                raise HTTPException(400, "Locatie niet herkend")
+        except Exception:
+            raise HTTPException(400, "Geocoding service traag of offline")
+
+    # 3. Weer ophalen
     weather_data = await weather.get_weather_for_location(comp.latitude, comp.longitude)
+    
     if not weather_data:
-        raise HTTPException(503, "Weerdata niet beschikbaar")
-    weather_cache[cache_key] = {"data": weather_data, "timestamp": time.time()}
+        raise HTTPException(503, "Weerdata service niet bereikbaar")
+
+    # 4. Opslaan in cache
+    weather_cache[str(comp_id)] = {"data": weather_data, "timestamp": time.time()}
+    
     return weather_data
 
 # ---------- RANKING ----------
