@@ -506,53 +506,82 @@ const handleRandomAssign = () => {
         </div>
       </motion.div>
 
-     {/* Weer info sectie */}
-<div className="min-h-[100px]"> {/* Voorkomt dat de pagina verspringt bij laden */}
+    {/* Weer info sectie */}
+<div className="min-h-[110px]"> 
   {loadingWeather ? (
-    <Card className="animate-pulse bg-muted/50">
+    <Card className="animate-pulse bg-muted/50 border-none shadow-none">
       <CardContent className="h-24 flex items-center justify-center">
-        <Cloud className="h-6 w-6 animate-bounce text-muted-foreground mr-2" />
-        <span className="text-sm">Weerbericht ophalen...</span>
+        <Cloud className="h-5 w-5 animate-bounce text-muted-foreground mr-3" />
+        <span className="text-sm font-medium text-muted-foreground">Weerbericht ophalen...</span>
       </CardContent>
     </Card>
   ) : weatherError ? (
-    <Card className="border-yellow-200 bg-yellow-50/50">
-      <CardContent className="py-4 flex justify-between items-center">
-        <p className="text-sm text-yellow-700">⚠️ Weer niet beschikbaar voor {competition.location}</p>
-        <Button variant="ghost" size="sm" onClick={fetchWeather}>Opnieuw</Button>
+    <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-900">
+      <CardContent className="py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-amber-600" />
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            {weatherError.includes("Geocoding") 
+              ? `Locatie "${competition.location}" niet gevonden. Gebruik een stadnaam.`
+              : "Weergegevens tijdelijk niet beschikbaar."}
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={fetchWeather}
+          className="border-amber-300 hover:bg-amber-100 dark:border-amber-800"
+        >
+          Opnieuw proberen
+        </Button>
       </CardContent>
     </Card>
   ) : weather && (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 relative overflow-hidden">
+    <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}>
+      <Card className="bg-gradient-to-br from-blue-500/10 via-transparent to-transparent border-blue-100 dark:border-slate-800 relative overflow-hidden shadow-sm">
         <CardContent className="pt-6">
           <Button 
             variant="ghost" 
             size="icon" 
-            className="absolute top-2 right-2 h-7 w-7 opacity-50 hover:opacity-100"
+            className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-blue-600"
             onClick={fetchWeather}
+            disabled={loadingWeather}
           >
-            <Shuffle className="h-3 w-3" />
+            <Shuffle className={`h-4 w-4 ${loadingWeather ? 'animate-spin' : ''}`} />
           </Button>
+          
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-               {/* Je iconen logica hier (Sun, Cloud, etc) */}
-               <div className="text-3xl">
-                 {weather.condition_code === 'sun' ? '☀️' : weather.condition_code === 'rain' ? '🌧️' : '☁️'}
+            <div className="flex items-center gap-5">
+               <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-blue-50 dark:border-slate-800">
+                 {weather.condition_code === 'sun' ? (
+                   <Sun className="h-8 w-8 text-yellow-500" />
+                 ) : weather.condition_code === 'rain' ? (
+                   <CloudRain className="h-8 w-8 text-blue-500" />
+                 ) : (
+                   <Cloud className="h-8 w-8 text-slate-400" />
+                 )}
                </div>
                <div>
-                 <p className="text-2xl font-bold">{weather.temperature}°C</p>
-                 <p className="text-xs text-muted-foreground uppercase tracking-wider">{weather.condition}</p>
+                 <div className="flex items-baseline gap-1">
+                   <p className="text-3xl font-bold tracking-tighter">{weather.temperature}</p>
+                   <p className="text-lg font-medium text-muted-foreground">°C</p>
+                 </div>
+                 <p className="text-xs font-semibold text-blue-600/80 dark:text-blue-400 uppercase tracking-widest">
+                   {weather.condition}
+                 </p>
                </div>
             </div>
-            <div className="flex gap-4 border-l pl-4">
-              <div className="text-center">
-                <Wind className="h-4 w-4 mx-auto text-blue-500 mb-1" />
-                <p className="text-xs font-bold">{weather.wind_speed} <span className="text-[9px] font-normal">km/h</span></p>
+
+            <div className="flex gap-6 pr-8">
+              <div className="flex flex-col items-center">
+                <Wind className="h-4 w-4 text-slate-400 mb-1" />
+                <p className="text-sm font-bold">{weather.wind_speed}</p>
+                <p className="text-[10px] text-muted-foreground uppercase">km/h</p>
               </div>
-              <div className="text-center">
-                <Droplets className="h-4 w-4 mx-auto text-blue-400 mb-1" />
-                <p className="text-xs font-bold">{weather.humidity}<span className="text-[9px] font-normal">%</span></p>
+              <div className="flex flex-col items-center">
+                <Droplets className="h-4 w-4 text-blue-400 mb-1" />
+                <p className="text-sm font-bold">{weather.humidity}%</p>
+                <p className="text-[10px] text-muted-foreground uppercase">Vocht</p>
               </div>
             </div>
           </div>
