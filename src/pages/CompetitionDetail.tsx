@@ -9,6 +9,7 @@ import {
   deleteCompetition,
   patchCompetition,
   assignNumbersRandomly,
+  resetParticipantNumbers,
   authHeaders,
 } from '@/lib/api';
 import { getTotalWeight, formatWeight } from '@/lib/utils';
