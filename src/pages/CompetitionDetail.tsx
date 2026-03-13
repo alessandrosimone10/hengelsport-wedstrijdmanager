@@ -92,28 +92,32 @@ export default function CompetitionDetail() {
     }
   }, [competition]);
 
-  const fetchWeather = async () => {
-    setLoadingWeather(true);
-    setWeatherError(null);
-    try {
-      const response = await fetch(`${API_BASE_URL}/competitions/${competitionId}/weather`, {
-        headers: authHeaders(),
-      });
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('Weer niet beschikbaar voor deze locatie');
-        }
-        throw new Error('Kon weer niet ophalen');
-      }
-      const data = await response.json();
-      setWeather(data);
-    } catch (err) {
-      setWeatherError(err instanceof Error ? err.message : 'Onbekende fout');
-    } finally {
-      setLoadingWeather(false);
-    }
-  };
+const fetchWeather = async () => {
+  setLoadingWeather(true);
+  setWeatherError(null);
+  console.log("Weer ophalen voor ID:", competitionId); // Debug log
 
+  try {
+    const response = await fetch(`${API_BASE_URL}/competitions/${competitionId}/weather`, {
+      headers: authHeaders(),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || 'Weer niet beschikbaar');
+    }
+    
+    const data = await response.json();
+    console.log("Weer data ontvangen:", data); // Debug log
+    setWeather(data);
+  } catch (err) {
+    console.error("Weer fout:", err);
+    setWeatherError(err instanceof Error ? err.message : 'Onbekende fout');
+  } finally {
+    setLoadingWeather(false);
+  }
+};
+  
   // ----- Mutaties -----
   const deleteMutation = useMutation({
     mutationFn: deleteCompetition,
