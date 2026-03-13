@@ -690,77 +690,68 @@ const handleRandomAssign = () => {
             Klassement
           </CardTitle>
           <div className="flex gap-2 flex-wrap">
-           {ranked.length > 0 && (
-  <Button size="sm" variant="outline" onClick={handleExportCSV}>
-    <Download className="mr-2 h-4 w-4" />
-    Export
-  </Button>
-)}
-{competition.participants.length > 0 && (
-  <Button
-    size="sm"
-    variant="outline"
-    onClick={handleRandomAssign}
-    disabled={!competition.available_numbers || competition.available_numbers.length < competition.participants.length}
-    title={
-      !competition.available_numbers
-        ? "Geen beschikbare nummers ingesteld"
-        : competition.available_numbers.length < competition.participants.length
-        ? "Te weinig nummers voor aantal deelnemers"
-        : "Nummers willekeurig verdelen"
-    }
-  >
-    <Shuffle className="mr-2 h-4 w-4" />
-    Loot nummers
-  </Button>
-)}
-            {/* Beschikbare nummers instellen */}
+            {ranked.length > 0 && (
+              <Button size="sm" variant="outline" onClick={handleExportCSV}>
+                <Download className="mr-2 h-4 w-4" />
+                Export
+              </Button>
+            )}
+
             {competition.participants.length > 0 && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size="sm" variant="outline">
-                    <Hash className="mr-2 h-4 w-4" />
-                    Nummers
-                  </Button>
-                <DialogTrigger asChild>
-  <Button size="sm" variant="outline">
-    <Hash className="mr-2 h-4 w-4" />
-    Nummers
-  </Button>
-</DialogTrigger>
-<DialogContent>
-  <DialogHeader>
-    <DialogTitle>Nummerbeheer</DialogTitle>
-    <DialogDescription>
-      Stel hier de beschikbare nummers in voor de deelnemers. Klik op "Opslaan" om de wijzigingen te bevestigen.
-    </DialogDescription>
-  </DialogHeader>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleRandomAssign}
+                disabled={randomAssignMutation.isPending || !competition.available_numbers || competition.available_numbers.length < competition.participants.length}
+                title={
+                  !competition.available_numbers
+                    ? "Geen beschikbare nummers ingesteld"
+                    : competition.available_numbers.length < competition.participants.length
+                    ? "Te weinig nummers voor aantal deelnemers"
+                    : "Nummers willekeurig verdelen"
+                }
+              >
+                <Shuffle className="mr-2 h-4 w-4" />
+                Loot nummers
+              </Button>
+            )}
 
-  <form onSubmit={handleUpdateAvailableNumbers} className="space-y-3">
-    <div className="space-y-2">
-      <Label htmlFor="available_numbers">Beschikbare nummers</Label>
-      <Textarea
-        id="available_numbers"
-        name="available_numbers"
-        placeholder="bijv. 1, 5, 8, 12, 19, 22, 35"
-        defaultValue={competition.available_numbers?.join(', ') ?? ''}
-      />
-      <p className="text-xs text-muted-foreground">
-        Met "Loot nummers" worden ze willekeurig verdeeld.
-      </p>
-    </div>
-    <Button type="submit" className="w-full" variant="outline">Nummers opslaan</Button>
-  </form>
+            {/* Nummerbeheer Dialog */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline">
+                  <Hash className="mr-2 h-4 w-4" />
+                  Nummers
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Nummerbeheer</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleUpdateAvailableNumbers} className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="available_numbers">Beschikbare nummers</Label>
+                    <Textarea
+                      id="available_numbers"
+                      name="available_numbers"
+                      placeholder="bijv. 1, 5, 8, 12, 19, 22, 35"
+                      defaultValue={competition.available_numbers?.join(', ') ?? ''}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full">Nummers opslaan</Button>
+                </form>
+                <div className="border-t pt-4">
+                  <p className="text-sm font-semibold mb-2">Huidige status</p>
+                  <div className="text-xs text-muted-foreground space-y-1 rounded-lg bg-muted p-3">
+                    {competition.participants.map((p, i) => (
+                      <div key={p.id}>{i + 1}. {p.name} → {p.number ?? '...'}</div>
+                    ))}
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
 
-  <div className="border-t pt-4">
-    <p className="text-sm font-semibold mb-2">Huidige nummers</p>
-    <div className="text-xs text-muted-foreground space-y-1 rounded-lg bg-muted p-3 mb-3">
-      {competition.participants.map((p, i) => (
-        <div key={p.id}>{i + 1}. {p.name} → {p.number ?? '...'}</div>
-      ))}
-    </div>
-  </div>
-</DialogContent>
+            {/* Deelnemer Toevoegen Dialog */}
             <Dialog>
               <DialogTrigger asChild>
                 <Button size="sm" variant="outline">
@@ -775,11 +766,11 @@ const handleRandomAssign = () => {
                 <form onSubmit={handleAddParticipant} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="pname">Naam</Label>
-                    <Input id="pname" name="name" placeholder="Naam deelnemer" required />
+                    <Input id="pname" name="name" placeholder="Naam" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="pnumber">Nummer (optioneel)</Label>
-                    <Input id="pnumber" name="number" type="number" min="1" placeholder="bijv. 8" />
+                    <Input id="pnumber" name="number" type="number" min="1" />
                   </div>
                   <Button type="submit" className="w-full">Toevoegen</Button>
                 </form>
@@ -787,55 +778,36 @@ const handleRandomAssign = () => {
             </Dialog>
           </div>
         </CardHeader>
+
         <CardContent>
-          {ranked.length === 0 ? (
-            <p className="py-6 text-center text-muted-foreground">
-              Nog geen deelnemers. Voeg deelnemers toe om te beginnen.
-            </p>
-          ) : (
+          <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">#</TableHead>
-                  <TableHead className="w-16">Nr.</TableHead>
+                  <TableHead className="w-16">Nr</TableHead>
                   <TableHead>Naam</TableHead>
                   <TableHead className="text-right">Gewicht</TableHead>
-                  <TableHead className="w-12" />
+                  <TableHead className="w-[100px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {ranked.map((p, i) => (
                   <TableRow key={p.id}>
-                    <TableCell className="font-mono font-semibold text-muted-foreground">
-                      {i + 1}
-                    </TableCell>
-                    <TableCell className="font-mono text-muted-foreground">
-                      {p.number ?? '—'}
-                    </TableCell>
-                    <TableCell className="font-medium">{p.name}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold">
-                      {formatWeight(p.total)}
-                    </TableCell>
+                    <TableCell className="font-bold">{i + 1}</TableCell>
+                    <TableCell className="font-mono">{p.number ?? '—'}</TableCell>
+                    <TableCell>{p.name}</TableCell>
+                    <TableCell className="text-right">{formatWeight(p.total)}</TableCell>
                     <TableCell>
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button size="icon" variant="ghost" className="h-8 w-8">
-                            <Plus className="h-4 w-4" />
-                          </Button>
+                          <Button size="icon" variant="ghost"><Plus className="h-4 w-4" /></Button>
                         </DialogTrigger>
                         <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                              <Fish className="h-5 w-5 text-primary" />
-                              Gewicht voor {p.name}
-                            </DialogTitle>
-                          </DialogHeader>
+                          <DialogHeader><DialogTitle>Vangst: {p.name}</DialogTitle></DialogHeader>
                           <form onSubmit={handleAddCatch(p.id)} className="space-y-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="weight">Gewicht (gram)</Label>
-                              <Input id="weight" name="weight" type="number" min="1" placeholder="bijv. 3500" required autoFocus />
-                            </div>
-                            <Button type="submit" className="w-full">Registreren</Button>
+                            <Input name="weight" type="number" placeholder="Gram" required />
+                            <Button type="submit" className="w-full">Opslaan</Button>
                           </form>
                         </DialogContent>
                       </Dialog>
@@ -844,39 +816,9 @@ const handleRandomAssign = () => {
                 ))}
               </TableBody>
             </Table>
-          )}
+          </div>
         </CardContent>
       </Card>
-
-      {/* Vangsten overzicht */}
-      {ranked.filter(p => p.catches.length > 0).length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-display text-lg">
-              <Fish className="h-5 w-5 text-primary" />
-              Vangsten overzicht
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {ranked.filter(p => p.catches.length > 0).map(p => (
-              <div key={p.id}>
-                <h4 className="mb-2 font-semibold text-sm">{p.name}</h4>
-                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {p.catches.map(c => (
-                    <div key={c.id} className="flex items-center justify-between rounded-lg border bg-muted/50 px-3 py-2 text-sm">
-                      <div>
-                        <span className="font-medium">{c.species}</span>
-                        <span className="ml-2 text-muted-foreground">{c.time}</span>
-                      </div>
-                      <span className="font-mono font-semibold">{formatWeight(c.weight)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
