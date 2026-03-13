@@ -495,12 +495,7 @@ async def get_competition_weather(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    # 1. Gebruik comp_id als cache key voor maximale snelheid
-    if str(comp_id) in weather_cache:
-        cached = weather_cache[str(comp_id)]
-        if time.time() - cached["timestamp"] < CACHE_DURATION:
-            return cached["data"]
-
+    # 1. Haal de competitie op
     comp = db.query(models.Competition).filter(
         models.Competition.id == comp_id,
         models.Competition.owner_id == current_user.id
@@ -509,18 +504,27 @@ async def get_competition_weather(
     if not comp:
         raise HTTPException(404, "Competitie niet gevonden")
 
-    # 2. Geocoding alleen als het echt moet
+    # 2. HIER PLAATS JE HET NIEUWE BLOK:
     if comp.latitude is None or comp.longitude is None:
         try:
-            # Voeg een timeout toe aan je geocoding als dat kan
-            coordinates = await geocoding.get_coordinates_from_location(comp.location)
+            # Importeer asyncio bovenaan je bestand als dat nog niet is gebeurd!
+            import asyncio 
+            
+            coordinates = await asyncio.wait_for(
+                geocoding.get_coordinates_from_location(comp.location), 
+                timeout=2.0
+            )
             if coordinates:
                 comp.latitude, comp.longitude = coordinates
                 db.commit()
             else:
-                raise HTTPException(400, "Locatie niet herkend")
-        except Exception:
-            raise HTTPException(400, "Geocoding service traag of offline")
+                # Als de service wel antwoordt maar niets vindt
+                raise HTTPException(400, "Locatie niet herkend door kaartenservice")
+                
+        except (asyncio.TimeoutError, Exception) as e:
+            print(f"Geocoding fout voor {comp.location}: {e}")
+            # We gooien een duidelijke foutmelding terug naar de frontend
+            raise HTTPException(400, "Geocoding service traag of offline. Probeer een simpelere locatie (bijv. alleen de stad).")
 
     # 3. Weer ophalen
     weather_data = await weather.get_weather_for_location(comp.latitude, comp.longitude)
