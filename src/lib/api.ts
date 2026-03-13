@@ -199,17 +199,15 @@ export async function patchCompetition(id: number, data: any) {
   const res = await fetch(`${API_BASE_URL}/competitions/${id}`, {
     method: "PATCH",
     headers: {
-      ...authHeaders(), // Dit haalt de Bearer token op
-      "Content-Type": "application/json",
+      ...authHeaders(),
+      "Content-Type": "application/json", // DIT IS DE FIX
     },
     body: JSON.stringify(data),
   });
+
   if (!res.ok) {
-    throw new Error("Update mislukt");
-  }
-  return res.json();
-}
-    throw new Error("Competition update failed");
+    const errorDetail = await res.json().catch(() => ({ detail: "Update mislukt" }));
+    throw new Error(errorDetail.detail || "Kon instellingen niet opslaan");
   }
   return res.json();
 }
